@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Accessible charts prototype — Highcharts + ColorADD</title>
+<meta name="description" content="Prototype demonstrating accessible bar and donut charts built with Highcharts, using the ColorADD symbol system to encode color as a non-color cue." />
+<link rel="stylesheet" href="./styles.css" />
+<!-- Highcharts core + accessibility, pattern-fill, and exporting modules.
+     Bundled locally so the page has zero external dependencies at runtime.
+     Accessibility module wires keyboard nav, screen reader region, and per-point descriptions. -->
+<script src="./vendor/highcharts.js"></script>
+<script src="./vendor/accessibility.js"></script>
+<script src="./vendor/pattern-fill.js"></script>
+<script src="./vendor/exporting.js"></script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header" role="banner">
+  <div class="wrap">
+    <p class="eyebrow">Prototype</p>
+    <h1>Accessible charts with Highcharts and the ColorADD system</h1>
+    <p class="lede">
+      Two Highcharts examples — a bar chart and a donut chart — where every color also carries a
+      <a href="https://www.coloradd.net/en/coloradd-code/">ColorADD</a> symbol. Color is never the only cue.
+      Each chart is paired with the same data as a table, and every series is directly labeled.
+    </p>
+  </div>
+</header>
+
+<main id="main" class="wrap" tabindex="-1">
+
+  <section aria-labelledby="how-heading" class="callout">
+    <h2 id="how-heading">How this meets the brief</h2>
+    <ul>
+      <li>Series distinguished by <strong>color, ColorADD symbol, direct label, and pattern</strong> — four independent cues.</li>
+      <li>Every chart ships with an <strong>adjacent data table</strong> so the numbers are readable without seeing the graphic.</li>
+      <li>All text pairs at <strong>4.5:1+</strong>; chart segments, borders, and focus rings at <strong>3:1+</strong>.</li>
+      <li>Full <strong>keyboard navigation</strong> via the Highcharts accessibility module. Try <kbd>Tab</kbd>, then arrow keys inside a chart.</li>
+      <li>Motion respects <code>prefers-reduced-motion</code>. Chart entrance animation is disabled when the OS asks for it.</li>
+      <li>Built to the <a href="https://github.com/danarandall/ai-a11y-toolkit">AI A11y Toolkit</a> baseline — WCAG 2.2 AA target.</li>
+    </ul>
+  </section>
+
+  <!-- ============ BAR CHART ============ -->
+  <section aria-labelledby="bar-heading" class="chart-block">
+    <h2 id="bar-heading">Quarterly revenue by product line</h2>
+    <p class="chart-summary" id="bar-summary">
+      Grouped vertical bars comparing four product lines across Q1–Q4 2026. Accessibility is the
+      strongest line every quarter, ending Q4 at $1.42M.
+    </p>
+
+    <figure class="chart-figure">
+      <figcaption class="visually-hidden">
+        Bar chart of quarterly revenue by product line. Data provided in the table below the chart.
+      </figcaption>
+      <div
+        id="bar-chart"
+        class="chart"
+        role="img"
+        aria-labelledby="bar-heading"
+        aria-describedby="bar-summary"
+      ></div>
+    </figure>
+
+    <details class="data-table-wrap">
+      <summary>Show data table for quarterly revenue</summary>
+      <table class="data-table">
+        <caption>Quarterly revenue by product line, 2026 ($ thousands)</caption>
+        <thead>
+          <tr>
+            <th scope="col">Product line</th>
+            <th scope="col">Q1</th>
+            <th scope="col">Q2</th>
+            <th scope="col">Q3</th>
+            <th scope="col">Q4</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Accessibility <span class="ca-inline" aria-hidden="true" data-symbol="blue"></span></th><td>980</td><td>1120</td><td>1290</td><td>1420</td></tr>
+          <tr><th scope="row">Design systems <span class="ca-inline" aria-hidden="true" data-symbol="yellow"></span></th><td>620</td><td>680</td><td>740</td><td>810</td></tr>
+          <tr><th scope="row">Research <span class="ca-inline" aria-hidden="true" data-symbol="green"></span></th><td>410</td><td>460</td><td>520</td><td>580</td></tr>
+          <tr><th scope="row">Training <span class="ca-inline" aria-hidden="true" data-symbol="red"></span></th><td>300</td><td>340</td><td>410</td><td>470</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </section>
+
+  <!-- ============ DONUT CHART ============ -->
+  <section aria-labelledby="donut-heading" class="chart-block">
+    <h2 id="donut-heading">Where accessibility budgets go</h2>
+    <p class="chart-summary" id="donut-summary">
+      Donut chart showing five spending categories. Remediation is the largest single category at 32%.
+    </p>
+
+    <figure class="chart-figure">
+      <figcaption class="visually-hidden">
+        Donut chart of accessibility budget allocation. Data provided in the table below.
+      </figcaption>
+      <div
+        id="donut-chart"
+        class="chart"
+        role="img"
+        aria-labelledby="donut-heading"
+        aria-describedby="donut-summary"
+      ></div>
+    </figure>
+
+    <details class="data-table-wrap">
+      <summary>Show data table for budget allocation</summary>
+      <table class="data-table">
+        <caption>Accessibility budget allocation, 2026</caption>
+        <thead>
+          <tr>
+            <th scope="col">Category</th>
+            <th scope="col">Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Remediation <span class="ca-inline" aria-hidden="true" data-symbol="red"></span></th><td>32%</td></tr>
+          <tr><th scope="row">Training <span class="ca-inline" aria-hidden="true" data-symbol="orange"></span></th><td>22%</td></tr>
+          <tr><th scope="row">Tooling <span class="ca-inline" aria-hidden="true" data-symbol="yellow"></span></th><td>18%</td></tr>
+          <tr><th scope="row">Audits <span class="ca-inline" aria-hidden="true" data-symbol="green"></span></th><td>16%</td></tr>
+          <tr><th scope="row">Research <span class="ca-inline" aria-hidden="true" data-symbol="blue"></span></th><td>12%</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </section>
+
+  <!-- ============ LEGEND KEY ============ -->
+  <section aria-labelledby="legend-heading" class="legend-key">
+    <h2 id="legend-heading">ColorADD key</h2>
+    <p>
+      ColorADD is a symbol system by Miguel Neiva that lets people with color vision deficiency identify
+      colors when color alone is a factor of identification, orientation, or choice
+      (<a href="https://en.wikipedia.org/wiki/ColorADD">overview</a>).
+      Three primary symbols represent blue, yellow, and red. Secondary colors combine those symbols.
+      Black and white fill or invert the swatch to indicate dark or light tones.
+    </p>
+    <ul class="swatch-grid" role="list">
+      <li><span class="swatch swatch--blue"    data-symbol="blue"    aria-hidden="true"></span><span>Blue — upward triangle, right</span></li>
+      <li><span class="swatch swatch--yellow"  data-symbol="yellow"  aria-hidden="true"></span><span>Yellow — downward triangle, left</span></li>
+      <li><span class="swatch swatch--red"     data-symbol="red"     aria-hidden="true"></span><span>Red — diagonal line</span></li>
+      <li><span class="swatch swatch--green"   data-symbol="green"   aria-hidden="true"></span><span>Green — blue + yellow</span></li>
+      <li><span class="swatch swatch--orange"  data-symbol="orange"  aria-hidden="true"></span><span>Orange — red + yellow</span></li>
+      <li><span class="swatch swatch--purple"  data-symbol="purple"  aria-hidden="true"></span><span>Purple — red + blue</span></li>
+      <li><span class="swatch swatch--brown"   data-symbol="brown"   aria-hidden="true"></span><span>Brown — red + green</span></li>
+      <li><span class="swatch swatch--black"   data-symbol="black"   aria-hidden="true"></span><span>Black — filled square</span></li>
+      <li><span class="swatch swatch--white"   data-symbol="white"   aria-hidden="true"></span><span>White — empty square</span></li>
+    </ul>
+    <p class="fine-print">
+      The symbols shown here follow the widely documented ColorADD forms
+      (<a href="https://en.wikipedia.org/wiki/ColorADD">Wikipedia</a>,
+      <a href="https://www.eib.org/en/stories/symbols-colour-blind">EIB</a>).
+      In production, license the official assets from <a href="https://www.coloradd.net/">coloradd.net</a>.
+    </p>
+  </section>
+
+  <!-- ============ AUDIT NOTES ============ -->
+  <section aria-labelledby="audit-heading" class="callout callout--muted">
+    <h2 id="audit-heading">What still needs human and screen reader testing</h2>
+    <ul>
+      <li>Verify NVDA, JAWS, and VoiceOver announcements for each chart series and slice.</li>
+      <li>Confirm the ColorADD symbols in each series marker render at ≥ 3:1 against the fill.</li>
+      <li>Confirm the license status of the ColorADD marks before production use.</li>
+      <li>Run an automated engine (IBM Equal Access or Pa11y) against the built page and fix findings at the source.</li>
+    </ul>
+    <p class="fine-print">
+      Following the AI A11y Toolkit guidance: this is a prototype for review, not a claim of WCAG conformance.
+    </p>
+  </section>
+
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="wrap">
+    <p>Accessible charts prototype using <a href="https://www.highcharts.com/">Highcharts</a> and the <a href="https://www.coloradd.net/">ColorADD</a> symbol system. Built to the <a href="https://github.com/danarandall/ai-a11y-toolkit">AI A11y Toolkit</a> baseline (WCAG 2.2 AA target).</p>
+  </div>
+</footer>
+
+<!-- Off-screen SVG library: one authoritative ColorADD glyph per color.
+     Referenced from Highcharts markers, from swatches in the legend, and from
+     the inline ColorADD marks inside the data tables. Single source of truth. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Each glyph is drawn on a 24x24 viewBox. Primary colors:
+         Blue   = triangle pointing up-right, aligned to right edge
+         Yellow = triangle pointing down-left, aligned to left edge
+         Red    = diagonal line, bottom-left to top-right
+         Black  = solid square
+         White  = empty square with border
+         Secondaries combine the primary strokes on a single tile. -->
+
+    <symbol id="ca-blue" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <polygon points="23,1 23,23 1,23" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="ca-yellow" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <polygon points="1,1 23,1 1,23" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="ca-red" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
+    </symbol>
+
+    <symbol id="ca-green" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <!-- blue + yellow -->
+      <polygon points="23,1 23,23 1,23" fill="currentColor" opacity=".9"/>
+      <polygon points="1,1 23,1 1,23" fill="currentColor" opacity=".55"/>
+    </symbol>
+
+    <symbol id="ca-orange" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <!-- red + yellow -->
+      <polygon points="1,1 23,1 1,23" fill="currentColor" opacity=".55"/>
+      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
+    </symbol>
+
+    <symbol id="ca-purple" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <!-- red + blue -->
+      <polygon points="23,1 23,23 1,23" fill="currentColor" opacity=".85"/>
+      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
+    </symbol>
+
+    <symbol id="ca-brown" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+      <!-- red + green (blue + yellow + red) -->
+      <polygon points="23,1 23,23 1,23" fill="currentColor" opacity=".8"/>
+      <polygon points="1,1 23,1 1,23" fill="currentColor" opacity=".5"/>
+      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
+    </symbol>
+
+    <symbol id="ca-black" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+
+    <symbol id="ca-white" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script src="./charts.js"></script>
+</body>
+</html>
