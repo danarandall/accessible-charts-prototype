@@ -574,7 +574,7 @@
   attachColorAddOverlay(barChart, {
     keyForPoint: (series) => series.userOptions.key,
     inkForPoint: (series) => series.userOptions.colorAddInk,
-    sizeForPoint: () => 18
+    sizeForPoint: () => 26
   });
 
   decorateLegendSwatches(barChart);
@@ -649,7 +649,7 @@
   attachColorAddOverlay(donutChart, {
     keyForPoint: (series, point) => point.options.key,
     inkForPoint: (series, point) => point.options.colorAddInk,
-    sizeForPoint: () => 24
+    sizeForPoint: () => 34
   });
 
   // ---------------------------------------------------------------------------
@@ -780,7 +780,7 @@
     // line a distinct symbol cue at both endpoints and along its length.
     sizeForPoint: (series, point, i) => {
       const last = series.points.length - 1;
-      return i === 0 || i === 4 || i === 8 || i === last ? 28 : 0;
+      return i === 0 || i === 4 || i === 8 || i === last ? 36 : 0;
     }
   });
 
