@@ -98,6 +98,48 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Build an HTML swatch for a Highcharts legend item: a colored tile with the
+  // ColorADD glyph inked in white on top. Returned as an inline block so it
+  // sits next to the legend label. This makes the legend key carry the same
+  // second cue (symbol) as the marks in the chart itself.
+  // ---------------------------------------------------------------------------
+  function legendSwatchHtml(key, fill) {
+    // Build the glyph primitives inline as SVG children so nothing routes
+    // through a data URI (which Highcharts' attribute validator rejects).
+    const parts = [];
+    (glyphs[key] || []).forEach((shape) => {
+      if (shape.type === 'polygon') {
+        parts.push(
+          '<polygon points="' + shape.points + '" fill="#ffffff" opacity="' +
+          (shape.opacity != null ? shape.opacity : 1) + '"/>'
+        );
+      } else if (shape.type === 'line') {
+        parts.push(
+          '<line x1="' + shape.x1 + '" y1="' + shape.y1 +
+          '" x2="' + shape.x2 + '" y2="' + shape.y2 +
+          '" stroke="#ffffff" stroke-width="' +
+          (shape.strokeWidth != null ? shape.strokeWidth : 2) +
+          '" stroke-linecap="square"/>'
+        );
+      } else if (shape.type === 'rect' && shape.fill) {
+        parts.push(
+          '<rect x="' + shape.x + '" y="' + shape.y +
+          '" width="' + shape.width + '" height="' + shape.height +
+          '" fill="#ffffff"/>'
+        );
+      }
+    });
+    return (
+      '<span aria-hidden="true" class="la-legend-swatch">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" focusable="false" ' +
+          'style="background:' + fill + ';border-radius:3px;">' +
+          parts.join('') +
+        '</svg>' +
+      '</span>'
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Populate legend swatches: --mask sets the ::after mask that overlays the
   // ColorADD glyph on top of the color fill. Ink color comes from CSS.
   // ---------------------------------------------------------------------------
@@ -230,6 +272,114 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Draw a ColorADD glyph on top of each Highcharts legend swatch. Runs on
+  // every 'render' so it survives resizes, visibility toggles, and updates.
+  // The primitives are appended to the legend group inside the chart's own
+  // SVG root, which means no HTML sanitizer, no data URIs, no font issues.
+  // ---------------------------------------------------------------------------
+  function decorateLegendSwatches(chart) {
+    const state = { marks: [] };
+
+    const paint = () => {
+      state.marks.forEach((m) => m.destroy());
+      state.marks = [];
+
+      if (!chart.legend || !chart.legend.group) return;
+
+      chart.series.forEach((s) => {
+        const key = s.userOptions && s.userOptions.key;
+        if (!key) return;
+
+        // Highcharts v11+ exposes the symbol here; earlier versions used
+        // `s.legendSymbol`. Support both.
+        const li = s.legendItem || {};
+        const symbol = li.symbol || s.legendSymbol;
+        if (!symbol || !symbol.element) return;
+
+        // Read the symbol's own x/y/width/height attributes. These are
+        // expressed in the coordinate space of the symbol's parent group
+        // (which is the per-legend-item <g> that Highcharts has already
+        // translated into position). Appending our glyph to that same
+        // parent means it inherits the correct transform for free.
+        const el = symbol.element;
+        const parent = el.parentNode; // per-item <g class="highcharts-legend-item">
+        if (!parent) return;
+        const sx = parseFloat(el.getAttribute('x')) || 0;
+        const sy = parseFloat(el.getAttribute('y')) || 0;
+        const sw = parseFloat(el.getAttribute('width')) || 0;
+        const sh = parseFloat(el.getAttribute('height')) || 0;
+        const size = Math.min(sw, sh);
+        if (size <= 0) return;
+        const cx = sx + sw / 2;
+        const cy = sy + sh / 2;
+
+        const scale = size / 24;
+        const px = (u) => cx - size / 2 + u * scale;
+        const py = (u) => cy - size / 2 + u * scale;
+
+        // Build the glyph group and inject it into the per-item parent
+        // group directly (not through Highcharts wrapper .add() with a
+        // wrapper reference, since parent is a raw DOM node).
+        const svgNs = 'http://www.w3.org/2000/svg';
+        const g = document.createElementNS(svgNs, 'g');
+        g.setAttribute('class', 'la-legend-glyph');
+        g.setAttribute('pointer-events', 'none');
+        parent.appendChild(g);
+
+        (glyphs[key] || []).forEach((shape) => {
+          if (shape.type === 'polygon') {
+            const pts = shape.points
+              .split(/\s+/)
+              .map((pair) => {
+                const [a, b] = pair.split(',').map(Number);
+                return `${px(a)},${py(b)}`;
+              })
+              .join(' ');
+            const el = document.createElementNS(svgNs, 'polygon');
+            el.setAttribute('points', pts);
+            el.setAttribute('fill', '#ffffff');
+            el.setAttribute('opacity', String(shape.opacity != null ? shape.opacity : 1));
+            g.appendChild(el);
+          } else if (shape.type === 'line') {
+            const el = document.createElementNS(svgNs, 'line');
+            el.setAttribute('x1', String(px(shape.x1)));
+            el.setAttribute('y1', String(py(shape.y1)));
+            el.setAttribute('x2', String(px(shape.x2)));
+            el.setAttribute('y2', String(py(shape.y2)));
+            el.setAttribute('stroke', '#ffffff');
+            el.setAttribute(
+              'stroke-width',
+              String(Math.max(1, (shape.strokeWidth != null ? shape.strokeWidth : 2) * scale))
+            );
+            el.setAttribute('stroke-linecap', 'square');
+            g.appendChild(el);
+          } else if (shape.type === 'rect' && shape.fill) {
+            const el = document.createElementNS(svgNs, 'rect');
+            el.setAttribute('x', String(px(shape.x)));
+            el.setAttribute('y', String(py(shape.y)));
+            el.setAttribute('width', String(shape.width * scale));
+            el.setAttribute('height', String(shape.height * scale));
+            el.setAttribute('fill', '#ffffff');
+            g.appendChild(el);
+          }
+        });
+
+        // Store the raw DOM node with a destroy() shim so the state array
+        // teardown path stays uniform.
+        state.marks.push({
+          destroy() {
+            if (g.parentNode) g.parentNode.removeChild(g);
+          }
+        });
+      });
+    };
+
+    Highcharts.addEvent(chart, 'render', paint);
+    // First paint (in case the render event already fired).
+    paint();
+  }
+
+  // ---------------------------------------------------------------------------
   // Highcharts defaults
   // ---------------------------------------------------------------------------
   Highcharts.setOptions({
@@ -262,10 +412,10 @@
   // BAR CHART
   // ---------------------------------------------------------------------------
   const barSeriesDefs = [
-    { name: 'Accessibility',  key: 'blue',   color: palette.blue,   data: [980, 1120, 1290, 1420] },
-    { name: 'Design systems', key: 'yellow', color: palette.yellow, data: [620,  680,  740,  810] },
-    { name: 'Research',       key: 'green',  color: palette.green,  data: [410,  460,  520,  580] },
-    { name: 'Training',       key: 'red',    color: palette.red,    data: [300,  340,  410,  470] }
+    { name: 'Sourdough loaves',   key: 'blue',   color: palette.blue,   data: [ 98, 112, 129, 142] },
+    { name: 'Pastries',           key: 'yellow', color: palette.yellow, data: [ 62,  68,  74,  81] },
+    { name: 'Subscription boxes', key: 'green',  color: palette.green,  data: [ 41,  46,  52,  58] },
+    { name: 'Wholesale',          key: 'red',    color: palette.red,    data: [ 30,  34,  41,  47] }
   ];
 
   const barChart = Highcharts.chart('bar-chart', {
@@ -288,9 +438,17 @@
     },
     legend: {
       enabled: true,
-      itemStyle: { color: token('--text'), fontWeight: '600' },
+      itemStyle: { color: token('--text'), fontWeight: '600', fontSize: '14px' },
       itemHoverStyle: { color: token('--focus') },
-      symbolHeight: 14
+      itemMarginTop: 6,
+      itemMarginBottom: 6,
+      // Highcharts draws its native symbol (a square) in the series color; the
+      // ColorADD glyph is layered on top later by decorateLegendSwatches() so
+      // the legend key carries the same second cue (symbol) as each bar.
+      squareSymbol: true,
+      symbolHeight: 16,
+      symbolWidth: 16,
+      symbolRadius: 3
     },
     tooltip: {
       shared: false,
@@ -333,8 +491,8 @@
     })),
     accessibility: {
       description:
-        'Grouped column chart. Four product lines compared across Q1 through Q4 2026. ' +
-        'Accessibility leads every quarter, growing from $980k to $1.42M.',
+        'Grouped column chart. Four bakery product lines compared across Q1 through Q4 2026. ' +
+        'Sourdough loaves lead every quarter, growing from $98k to $142k.',
       point: {
         valueDescriptionFormat: '{index}. {xDescription}, {series.name}: ${value} thousand.'
       }
@@ -347,15 +505,17 @@
     ink: '#ffffff'
   });
 
+  decorateLegendSwatches(barChart);
+
   // ---------------------------------------------------------------------------
   // DONUT CHART
   // ---------------------------------------------------------------------------
   const donutSeries = [
-    { name: 'Remediation', key: 'red',    color: palette.red,    y: 32 },
-    { name: 'Training',    key: 'orange', color: palette.orange, y: 22 },
-    { name: 'Tooling',     key: 'yellow', color: palette.yellow, y: 18 },
-    { name: 'Audits',      key: 'green',  color: palette.green,  y: 16 },
-    { name: 'Research',    key: 'blue',   color: palette.blue,   y: 12 }
+    { name: 'Farmers market',     key: 'red',    color: palette.red,    y: 32 },
+    { name: 'Wholesale accounts', key: 'orange', color: palette.orange, y: 22 },
+    { name: 'Subscription boxes', key: 'yellow', color: palette.yellow, y: 18 },
+    { name: 'Pop-ups',            key: 'green',  color: palette.green,  y: 16 },
+    { name: 'Online store',       key: 'blue',   color: palette.blue,   y: 12 }
   ];
 
   const donutChart = Highcharts.chart('donut-chart', {
@@ -397,13 +557,13 @@
         y: d.y,
         color: d.color,
         key: d.key,
-        accessibility: { description: `${d.name}, ${d.y} percent of accessibility budget.` }
+        accessibility: { description: `${d.name}, ${d.y} percent of 2026 bakery revenue.` }
       }))
     }],
     accessibility: {
       description:
-        'Donut chart of 2026 accessibility budget allocation. Five categories total 100 percent. ' +
-        'Remediation is the largest slice at 32 percent, followed by training, tooling, audits, and research.',
+        'Donut chart of 2026 bakery revenue mix. Five channels total 100 percent. ' +
+        'Farmers market is the largest slice at 32 percent, followed by wholesale accounts, subscription boxes, pop-ups, and the online store.',
       point: {
         valueDescriptionFormat: '{point.name}: {point.percentage:.0f} percent.'
       }
