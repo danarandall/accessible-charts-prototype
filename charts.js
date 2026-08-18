@@ -38,115 +38,80 @@
   // on chart overlays where a border would fight the bar edge.
   // ---------------------------------------------------------------------------
 
-  // Geometry follows the official ColorADD code sheet ("Primary and Secondary
-  // Colors" reference supplied by the user). Every primary is a rounded shape
-  // occupying roughly the outer third of the 24×24 tile:
+  // Geometry is imported verbatim from the ColorADD System Figma file:
+  //   https://www.figma.com/design/AOKiwyj3cjePY1iap8R7kw/ColorADD-System
+  // Each glyph is one or more SVG paths in its own native viewBox. At draw
+  // time the paths are placed centered inside the target tile with a small
+  // padding so the shape sits comfortably. Every path is painted in the
+  // single ink color of the tile (per official spec — no per-shape colors).
   //
-  //   Blue   = rounded right triangle in the TOP-LEFT corner. Right angle at
-  //            (1,1); legs run to (~12,1) and (1,~12); hypotenuse faces down-
-  //            right.
-  //   Red    = rounded right triangle in the BOTTOM-RIGHT corner. Right angle
-  //            at (23,23); legs run to (~12,23) and (23,~12); hypotenuse faces
-  //            up-left. Blue and red sit diagonally opposite across the tile.
-  //   Yellow = rounded diagonal bar (capsule) running from top-left area down
-  //            to bottom-right area — same axis the blue triangle's hypotenuse
-  //            and the red triangle's hypotenuse share. In compound glyphs the
-  //            bar sits BETWEEN the two triangles.
-  //
-  // Compounds are the union of their component primaries:
-  //   Green  = Blue + Yellow
-  //   Orange = Red + Yellow
-  //   Purple = Blue + Red
-  //   Brown  = Red + Green = Blue + Red + Yellow
-  //
-  // Rounded corners on triangles are drawn via a matching-color stroke with
-  // stroke-linejoin=round; capsules use stroke-linecap=round.
-  const R_JOIN = { rounded: true }; // marker for renderers
+  //   blue   = rounded diagonal shape whose right angle sits bottom-right,
+  //            hypotenuse faces upper-left
+  //   red    = mirror of blue: right angle sits top-left, hypotenuse faces
+  //            lower-right
+  //   yellow = rounded diagonal capsule bar, top-right → bottom-left
+  //   orange = yellow bar + red shape
+  //   purple = blue shape + red shape
+  //   green  = yellow bar + blue shape
   const glyphs = {
-    blue: [
-      // Rounded right triangle, top-left corner.
-      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN)
-    ],
-    red: [
-      // Rounded right triangle, bottom-right corner.
-      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
-    ],
-    yellow: [
-      // Rounded diagonal bar from upper-left toward lower-right.
-      { type: 'capsule', x1: 4, y1: 4, x2: 20, y2: 20, thickness: 5 }
-    ],
-    green: [
-      // Blue triangle + yellow bar.
-      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN),
-      { type: 'capsule', x1: 6, y1: 6, x2: 20, y2: 20, thickness: 5 }
-    ],
-    orange: [
-      // Yellow bar + red triangle.
-      { type: 'capsule', x1: 4, y1: 4, x2: 18, y2: 18, thickness: 5 },
-      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
-    ],
-    purple: [
-      // Blue triangle + red triangle, diagonally opposite.
-      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN),
-      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
-    ],
-    brown: [
-      // Blue + red + yellow.
-      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN),
-      { type: 'capsule', x1: 6, y1: 6, x2: 18, y2: 18, thickness: 5 },
-      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
-    ],
-    black: [{ type: 'rect', x: 1, y: 1, width: 22, height: 22, fill: true }],
-    white: [] // just the outline
+    blue: {
+      viewBox: '0 0 55 54',
+      paths: [
+        'M54.6927 43.0445C54.6528 49.1348 49.6833 54.0396 43.593 53.9997L10.9771 53.7861C1.09539 53.7213 -3.71979 41.6927 3.38764 34.827L36.2126 3.11872C43.2378 -3.66748 54.9658 1.35511 54.9018 11.1225L54.6927 43.0445Z'
+      ]
+    },
+    red: {
+      viewBox: '0 0 55 54',
+      paths: [
+        'M2.54394e-05 11.0277C2.86631e-05 4.93728 4.9373 5.36865e-06 11.0277 1.50325e-05L43.6442 5.75229e-05C53.5261 6.88445e-05 58.4199 11.9969 51.3577 18.9089L18.7412 50.8314C11.7606 57.6635 1.22522e-07 52.7178 6.85494e-06 42.9503L2.54394e-05 11.0277Z'
+      ]
+    },
+    yellow: {
+      viewBox: '0 0 91 91',
+      paths: [
+        'M74.7046 2.79587C78.4324 -0.931937 84.4763 -0.931938 88.2041 2.79587C91.9319 6.52367 91.9319 12.5676 88.2041 16.2954L16.2954 88.2041C12.5676 91.932 6.52366 91.932 2.79585 88.2041C-0.931951 84.4763 -0.931951 78.4324 2.79585 74.7046L74.7046 2.79587Z'
+      ]
+    },
+    orange: {
+      viewBox: '0 0 95 94',
+      paths: [
+        'M78.4097 5.66181C82.1431 1.92834 88.1963 1.92834 91.9298 5.66181C95.6632 9.39528 95.6632 15.4484 91.9298 19.1819L19.9118 91.1999C16.1783 94.9334 10.1251 94.9334 6.39167 91.1999C2.6582 87.4664 2.6582 81.4133 6.39167 77.6798L78.4097 5.66181Z',
+        'M2.55362e-05 11.0697C2.87721e-05 4.95606 4.95609 5.38908e-06 11.0697 1.50897e-05L43.8102 5.77418e-05C53.7297 6.91064e-05 58.6422 12.0425 51.553 18.9808L18.8124 51.0248C11.8053 57.8828 1.22988e-07 52.9184 6.88102e-06 43.1137L2.55362e-05 11.0697Z'
+      ]
+    },
+    purple: {
+      viewBox: '0 0 97 57',
+      paths: [
+        'M96.7899 45.6183C96.7499 51.7303 91.7627 56.6526 85.6507 56.6125L52.9189 56.3981C43.002 56.3331 38.1697 44.2617 45.3024 37.3717L78.2441 5.55064C85.2943 -1.25969 97.0639 3.78076 96.9997 13.5829L96.7899 45.6183Z',
+        'M2.55299e-05 11.0669C2.87651e-05 4.95484 4.95487 5.38776e-06 11.067 1.5086e-05L43.7995 5.77276e-05C53.7166 6.90894e-05 58.6278 12.0396 51.5404 18.9762L18.8078 51.0123C11.8024 57.8686 1.22958e-07 52.9054 6.87933e-06 43.1031L2.55299e-05 11.0669Z'
+      ]
+    },
+    green: {
+      viewBox: '0 0 93 96',
+      paths: [
+        'M92.7908 84.6404C92.751 90.7256 87.7856 95.6263 81.7004 95.5864L49.112 95.3729C39.2386 95.3082 34.4275 83.2897 41.529 76.4299L74.3263 44.7483C81.3456 37.9678 93.0637 42.9861 92.9997 52.7453L92.7908 84.6404Z',
+        'M74.472 2.78716C78.1882 -0.929036 84.2133 -0.929037 87.9295 2.78716C91.6457 6.50336 91.6457 12.5285 87.9295 16.2447L16.2447 87.9295C12.5685 91.6457 6.50335 91.6457 2.78715 87.9295C-0.929049 84.2133 -0.929049 78.1882 2.78715 74.472L74.472 2.78716Z'
+      ]
+    }
   };
 
-  // Build a standalone SVG string for a given glyph, used as a CSS mask.
-  // Inside a mask, `currentColor` cannot be resolved (no color context), so we
-  // use solid black — the mask reads alpha, then CSS `background-color:
-  // currentColor` on the element paints the visible color underneath.
-  const outlineRect =
-    '<rect x="1" y="1" width="22" height="22" fill="none" stroke="#000" stroke-width="2"/>';
-
-  // Build a fully-colored inline SVG for a glyph. Shapes with an explicit
-  // string `fill` are painted in that color; not used by any current glyph
-  // that color; all other shapes are painted in `ink`. Returned SVG can be
-  // used as a CSS `background-image` (full color) rather than a monochrome
-  // mask; retained for future compound-color extensions.
-  function glyphToSvg(key, includeOutline, ink, outlineColor) {
-    const parts = [];
-    const paint = (s) => (typeof s.fill === 'string' ? s.fill : ink);
-    if (includeOutline) {
-      parts.push(
-        `<rect x="1" y="1" width="22" height="22" fill="none" stroke="${outlineColor || ink}" stroke-width="2"/>`
-      );
-    }
-    (glyphs[key] || []).forEach((shape) => {
-      if (shape.type === 'polygon') {
-        const color = paint(shape);
-        // For rounded polygons we simulate rounded corners by giving the
-        // fill a matching thick stroke with round joins — the stroke rides
-        // OUTSIDE the polygon, effectively rounding the corners.
-        const strokeAttrs = shape.rounded
-          ? ` stroke="${color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`
-          : '';
-        parts.push(
-          `<polygon points="${shape.points}" fill="${color}" opacity="${shape.opacity ?? 1}"${strokeAttrs}/>`
-        );
-      } else if (shape.type === 'capsule') {
-        parts.push(
-          `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" stroke="${paint(shape)}" stroke-width="${shape.thickness ?? 5}" stroke-linecap="round"/>`
-        );
-      } else if (shape.type === 'line') {
-        parts.push(
-          `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" stroke="${paint(shape)}" stroke-width="${shape.strokeWidth ?? 2}" stroke-linecap="square"/>`
-        );
-      } else if (shape.type === 'rect' && shape.fill) {
-        parts.push(
-          `<rect x="${shape.x}" y="${shape.y}" width="${shape.width}" height="${shape.height}" fill="${paint(shape)}"/>`
-        );
-      }
-    });
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${parts.join('')}</svg>`;
+  // Build a fully-colored inline SVG for a given glyph key. Returned SVG uses
+  // the glyph's own viewBox and paints every path in `ink`. When called for a
+  // legend swatch, no outline is added (the swatch's border comes from CSS).
+  // The `includeOutline` and `outlineColor` args are kept for API stability
+  // with earlier renderers but currently ignored — the official ColorADD
+  // primaries have no bounding box; a box would misread as a light-shade
+  // variant.
+  function glyphToSvg(key /*, includeOutline, ink, outlineColor */) {
+    // Reorder args by position; last arg is ink.
+    const args = arguments;
+    const ink = args[2] || '#000000';
+    const g = glyphs[key];
+    if (!g) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>`;
+    const paths = g.paths
+      .map((d) => `<path d="${d}" fill="${ink}"/>`)
+      .join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${g.viewBox}">${paths}</svg>`;
   }
 
   // Convert an SVG string into a CSS `url()` value suitable for background-image.
@@ -161,36 +126,17 @@
   // second cue (symbol) as the marks in the chart itself.
   // ---------------------------------------------------------------------------
   function legendSwatchHtml(key, fill) {
-    // Build the glyph primitives inline as SVG children so nothing routes
-    // through a data URI (which Highcharts' attribute validator rejects).
-    const parts = [];
-    (glyphs[key] || []).forEach((shape) => {
-      if (shape.type === 'polygon') {
-        parts.push(
-          '<polygon points="' + shape.points + '" fill="#ffffff" opacity="' +
-          (shape.opacity != null ? shape.opacity : 1) + '"/>'
-        );
-      } else if (shape.type === 'line') {
-        parts.push(
-          '<line x1="' + shape.x1 + '" y1="' + shape.y1 +
-          '" x2="' + shape.x2 + '" y2="' + shape.y2 +
-          '" stroke="#ffffff" stroke-width="' +
-          (shape.strokeWidth != null ? shape.strokeWidth : 2) +
-          '" stroke-linecap="square"/>'
-        );
-      } else if (shape.type === 'rect' && shape.fill) {
-        parts.push(
-          '<rect x="' + shape.x + '" y="' + shape.y +
-          '" width="' + shape.width + '" height="' + shape.height +
-          '" fill="#ffffff"/>'
-        );
-      }
-    });
+    const g = glyphs[key];
+    if (!g) return '';
+    const paths = g.paths
+      .map((d) => '<path d="' + d + '" fill="#ffffff"/>')
+      .join('');
     return (
       '<span aria-hidden="true" class="la-legend-swatch">' +
-        '<svg viewBox="0 0 24 24" width="18" height="18" focusable="false" ' +
-          'style="background:' + fill + ';border-radius:3px;">' +
-          parts.join('') +
+        '<svg viewBox="' + g.viewBox + '" width="18" height="18" ' +
+          'preserveAspectRatio="xMidYMid meet" focusable="false" ' +
+          'style="background:' + fill + ';border-radius:3px;padding:2px;">' +
+          paths +
         '</svg>' +
       '</span>'
     );
@@ -232,16 +178,14 @@
   function drawColorAddGlyph(chart, cx, cy, size, key, ink, tileFill) {
     const renderer = chart.renderer;
     const half = size / 2;
-    // Group everything so we can position/transform once.
     const group = renderer.g().attr({ zIndex: 6 }).add();
 
     // Background tile: when we are drawing over a colored plot mark (bar top,
     // pie slice) we pass tileFill = null and rely on the mark's own color; the
-    // subtle white overlay just softens the glyph's edges. When we are drawing
-    // in empty plot area (line chart), we pass the series color so the glyph
-    // sits on its own colored tile.
+    // subtle overlay softens the glyph's edges. On the line chart we pass the
+    // series color so the glyph sits on its own colored tile.
     renderer
-      .rect(cx - half, cy - half, size, size, 3)
+      .rect(cx - half, cy - half, size, size, 4)
       .attr({
         fill: tileFill || 'rgba(255,255,255,0.15)',
         stroke: ink,
@@ -249,72 +193,28 @@
       })
       .add(group);
 
-    const scale = size / 24;
-    // Convert glyph coords (0-24) to absolute chart coords.
-    const px = (u) => cx - half + u * scale;
-    const py = (u) => cy - half + u * scale;
-
-    // If a shape declares an explicit fill string (e.g. compound glyphs like
-    // shape (unused today), honor it; otherwise paint in
-    // the series ink.
-    const paintColor = (shape) =>
-      typeof shape.fill === 'string' ? shape.fill : ink;
-
-    (glyphs[key] || []).forEach((shape) => {
-      if (shape.type === 'polygon') {
-        const pts = shape.points
-          .split(/\s+/)
-          .map((pair) => {
-            const [a, b] = pair.split(',').map(Number);
-            return `${px(a)},${py(b)}`;
-          })
-          .join(' ');
-        const color = paintColor(shape);
-        const attrs = {
-          points: pts,
-          fill: color,
-          opacity: shape.opacity ?? 1
-        };
-        if (shape.rounded) {
-          attrs.stroke = color;
-          attrs['stroke-width'] = 3 * scale;
-          attrs['stroke-linejoin'] = 'round';
-          attrs['stroke-linecap'] = 'round';
-        }
-        renderer.createElement('polygon').attr(attrs).add(group);
-      } else if (shape.type === 'capsule') {
-        renderer
-          .createElement('line')
-          .attr({
-            x1: px(shape.x1),
-            y1: py(shape.y1),
-            x2: px(shape.x2),
-            y2: py(shape.y2),
-            stroke: paintColor(shape),
-            'stroke-width': (shape.thickness ?? 5) * scale,
-            'stroke-linecap': 'round'
-          })
-          .add(group);
-      } else if (shape.type === 'line') {
-        renderer
-          .createElement('line')
-          .attr({
-            x1: px(shape.x1),
-            y1: py(shape.y1),
-            x2: px(shape.x2),
-            y2: py(shape.y2),
-            stroke: paintColor(shape),
-            'stroke-width': (shape.strokeWidth ?? 2) * scale,
-            'stroke-linecap': 'square'
-          })
-          .add(group);
-      } else if (shape.type === 'rect' && shape.fill) {
-        renderer
-          .rect(px(shape.x), py(shape.y), shape.width * scale, shape.height * scale)
-          .attr({ fill: paintColor(shape) })
-          .add(group);
-      }
-    });
+    const g = glyphs[key];
+    if (g) {
+      // Insert a nested <svg> inside the group so the glyph paths render in
+      // their own native viewBox coordinate system; the outer <svg> handles
+      // the placement and scaling for us.
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const pad = size * 0.12; // leave 12% margin so shape doesn't kiss the tile edge
+      const inner = document.createElementNS(svgNs, 'svg');
+      inner.setAttribute('x', String(cx - half + pad));
+      inner.setAttribute('y', String(cy - half + pad));
+      inner.setAttribute('width', String(size - pad * 2));
+      inner.setAttribute('height', String(size - pad * 2));
+      inner.setAttribute('viewBox', g.viewBox);
+      inner.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      g.paths.forEach((d) => {
+        const p = document.createElementNS(svgNs, 'path');
+        p.setAttribute('d', d);
+        p.setAttribute('fill', ink);
+        inner.appendChild(p);
+      });
+      group.element.appendChild(inner);
+    }
 
     // Decorative, per WAI-ARIA in SVG guidance for chart overlays.
     group.element.setAttribute('aria-hidden', 'true');
@@ -429,85 +329,34 @@
         const cx = sx + sw / 2;
         const cy = sy + sh / 2;
 
-        const scale = size / 24;
-        const px = (u) => cx - size / 2 + u * scale;
-        const py = (u) => cy - size / 2 + u * scale;
+        const glyph = glyphs[key];
+        if (!glyph) return;
 
-        // Build the glyph group and inject it into the per-item parent
-        // group directly (not through Highcharts wrapper .add() with a
-        // wrapper reference, since parent is a raw DOM node).
+        // Build a nested <svg> holding the glyph paths in their own native
+        // viewBox; inject into the per-item parent group so it inherits the
+        // legend's transform.
         const svgNs = 'http://www.w3.org/2000/svg';
-        const g = document.createElementNS(svgNs, 'g');
-        g.setAttribute('class', 'la-legend-glyph');
-        g.setAttribute('pointer-events', 'none');
-        parent.appendChild(g);
-
-        const paint = (shape) =>
-          typeof shape.fill === 'string' ? shape.fill : ink;
-
-        (glyphs[key] || []).forEach((shape) => {
-          if (shape.type === 'polygon') {
-            const pts = shape.points
-              .split(/\s+/)
-              .map((pair) => {
-                const [a, b] = pair.split(',').map(Number);
-                return `${px(a)},${py(b)}`;
-              })
-              .join(' ');
-            const color = paint(shape);
-            const el = document.createElementNS(svgNs, 'polygon');
-            el.setAttribute('points', pts);
-            el.setAttribute('fill', color);
-            el.setAttribute('opacity', String(shape.opacity != null ? shape.opacity : 1));
-            if (shape.rounded) {
-              el.setAttribute('stroke', color);
-              el.setAttribute('stroke-width', String(Math.max(1, 3 * scale)));
-              el.setAttribute('stroke-linejoin', 'round');
-              el.setAttribute('stroke-linecap', 'round');
-            }
-            g.appendChild(el);
-          } else if (shape.type === 'capsule') {
-            const el = document.createElementNS(svgNs, 'line');
-            el.setAttribute('x1', String(px(shape.x1)));
-            el.setAttribute('y1', String(py(shape.y1)));
-            el.setAttribute('x2', String(px(shape.x2)));
-            el.setAttribute('y2', String(py(shape.y2)));
-            el.setAttribute('stroke', paint(shape));
-            el.setAttribute(
-              'stroke-width',
-              String(Math.max(1, (shape.thickness != null ? shape.thickness : 5) * scale))
-            );
-            el.setAttribute('stroke-linecap', 'round');
-            g.appendChild(el);
-          } else if (shape.type === 'line') {
-            const el = document.createElementNS(svgNs, 'line');
-            el.setAttribute('x1', String(px(shape.x1)));
-            el.setAttribute('y1', String(py(shape.y1)));
-            el.setAttribute('x2', String(px(shape.x2)));
-            el.setAttribute('y2', String(py(shape.y2)));
-            el.setAttribute('stroke', paint(shape));
-            el.setAttribute(
-              'stroke-width',
-              String(Math.max(1, (shape.strokeWidth != null ? shape.strokeWidth : 2) * scale))
-            );
-            el.setAttribute('stroke-linecap', 'square');
-            g.appendChild(el);
-          } else if (shape.type === 'rect' && shape.fill) {
-            const el = document.createElementNS(svgNs, 'rect');
-            el.setAttribute('x', String(px(shape.x)));
-            el.setAttribute('y', String(py(shape.y)));
-            el.setAttribute('width', String(shape.width * scale));
-            el.setAttribute('height', String(shape.height * scale));
-            el.setAttribute('fill', paint(shape));
-            g.appendChild(el);
-          }
+        const pad = size * 0.14;
+        const inner = document.createElementNS(svgNs, 'svg');
+        inner.setAttribute('class', 'la-legend-glyph');
+        inner.setAttribute('pointer-events', 'none');
+        inner.setAttribute('x', String(cx - size / 2 + pad));
+        inner.setAttribute('y', String(cy - size / 2 + pad));
+        inner.setAttribute('width', String(size - pad * 2));
+        inner.setAttribute('height', String(size - pad * 2));
+        inner.setAttribute('viewBox', glyph.viewBox);
+        inner.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        glyph.paths.forEach((d) => {
+          const p = document.createElementNS(svgNs, 'path');
+          p.setAttribute('d', d);
+          p.setAttribute('fill', ink);
+          inner.appendChild(p);
         });
+        parent.appendChild(inner);
 
-        // Store the raw DOM node with a destroy() shim so the state array
-        // teardown path stays uniform.
         state.marks.push({
           destroy() {
-            if (g.parentNode) g.parentNode.removeChild(g);
+            if (inner.parentNode) inner.parentNode.removeChild(inner);
           }
         });
       });
@@ -742,7 +591,7 @@
   ];
 
   const lineChart = Highcharts.chart('line-chart', {
-    chart: { type: 'line', height: 460, spacingBottom: 24, marginRight: 200 },
+    chart: { type: 'line', height: 460, spacingBottom: 24, marginRight: 220 },
     title: { text: null },
     xAxis: {
       categories: weeks,
@@ -809,7 +658,7 @@
           },
           align: 'left',
           verticalAlign: 'middle',
-          x: 22,
+          x: 40,
           allowOverlap: false,
           style: {
             color: token('--text'),
