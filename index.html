@@ -23,7 +23,7 @@
     <p class="eyebrow">Prototype</p>
     <h1>Accessible charts with Highcharts and the ColorADD system</h1>
     <p class="lede">
-      Two Highcharts examples — a bar chart and a donut chart — where every color also carries a
+      Three Highcharts examples — a bar chart, a donut chart, and a line chart — where every color also carries a
       <a href="https://www.coloradd.net/en/coloradd-code/">ColorADD</a> symbol. Color is never the only cue.
       Each chart is paired with the same data as a table, and every series is directly labeled.
     </p>
@@ -35,7 +35,7 @@
   <section aria-labelledby="how-heading" class="callout">
     <h2 id="how-heading">How this meets the brief</h2>
     <ul>
-      <li>Series distinguished by <strong>color, ColorADD symbol, direct label, and pattern</strong> — four independent cues.</li>
+      <li>Series distinguished by <strong>color, ColorADD symbol, and direct label</strong> — three independent, non-color-only cues.</li>
       <li>Every chart ships with an <strong>adjacent data table</strong> so the numbers are readable without seeing the graphic.</li>
       <li>All text pairs at <strong>4.5:1+</strong>; chart segments, borders, and focus rings at <strong>3:1+</strong>.</li>
       <li>Full <strong>keyboard navigation</strong> via the Highcharts accessibility module. Try <kbd>Tab</kbd>, then arrow keys inside a chart.</li>
@@ -79,10 +79,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Sourdough loaves <span class="ca-inline" aria-hidden="true" data-symbol="blue"></span></th><td>98</td><td>112</td><td>129</td><td>142</td></tr>
-          <tr><th scope="row">Pastries <span class="ca-inline" aria-hidden="true" data-symbol="yellow"></span></th><td>62</td><td>68</td><td>74</td><td>81</td></tr>
-          <tr><th scope="row">Subscription boxes <span class="ca-inline" aria-hidden="true" data-symbol="green"></span></th><td>41</td><td>46</td><td>52</td><td>58</td></tr>
-          <tr><th scope="row">Wholesale <span class="ca-inline" aria-hidden="true" data-symbol="red"></span></th><td>30</td><td>34</td><td>41</td><td>47</td></tr>
+          <tr><th scope="row">Sourdough loaves <span class="ca-inline" aria-hidden="true" data-tile="blue"       data-symbol="blue"></span></th><td>98</td><td>112</td><td>129</td><td>142</td></tr>
+          <tr><th scope="row">Pastries <span class="ca-inline" aria-hidden="true" data-tile="orange"     data-symbol="orange"></span></th><td>62</td><td>68</td><td>74</td><td>81</td></tr>
+          <tr><th scope="row">Subscription boxes <span class="ca-inline" aria-hidden="true" data-tile="light-blue" data-symbol="blue"></span></th><td>41</td><td>46</td><td>52</td><td>58</td></tr>
+          <tr><th scope="row">Wholesale <span class="ca-inline" aria-hidden="true" data-tile="red"        data-symbol="red"></span></th><td>30</td><td>34</td><td>41</td><td>47</td></tr>
         </tbody>
       </table>
     </details>
@@ -120,11 +120,63 @@
           </tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Farmers market <span class="ca-inline" aria-hidden="true" data-symbol="red"></span></th><td>32%</td></tr>
-          <tr><th scope="row">Wholesale accounts <span class="ca-inline" aria-hidden="true" data-symbol="orange"></span></th><td>22%</td></tr>
-          <tr><th scope="row">Subscription boxes <span class="ca-inline" aria-hidden="true" data-symbol="yellow"></span></th><td>18%</td></tr>
-          <tr><th scope="row">Pop-ups <span class="ca-inline" aria-hidden="true" data-symbol="green"></span></th><td>16%</td></tr>
-          <tr><th scope="row">Online store <span class="ca-inline" aria-hidden="true" data-symbol="blue"></span></th><td>12%</td></tr>
+          <tr><th scope="row">Farmers market <span class="ca-inline" aria-hidden="true" data-tile="red"        data-symbol="red"></span></th><td>32%</td></tr>
+          <tr><th scope="row">Wholesale accounts <span class="ca-inline" aria-hidden="true" data-tile="orange"     data-symbol="orange"></span></th><td>22%</td></tr>
+          <tr><th scope="row">Subscription boxes <span class="ca-inline" aria-hidden="true" data-tile="violet"     data-symbol="violet"></span></th><td>18%</td></tr>
+          <tr><th scope="row">Pop-ups <span class="ca-inline" aria-hidden="true" data-tile="light-blue" data-symbol="blue"></span></th><td>16%</td></tr>
+          <tr><th scope="row">Online store <span class="ca-inline" aria-hidden="true" data-tile="blue"       data-symbol="blue"></span></th><td>12%</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </section>
+
+  <!-- ============ LINE CHART ============ -->
+  <section aria-labelledby="line-heading" class="chart-block">
+    <h2 id="line-heading">Weekly loaves sold, by product line</h2>
+    <p class="chart-summary" id="line-summary">
+      Twelve-week line chart tracking weekly units sold across the same four product lines.
+      Sourdough loaves trend up steadily; wholesale climbs after week 6 as a new café account onboards.
+    </p>
+
+    <figure class="chart-figure">
+      <figcaption class="visually-hidden">
+        Line chart of weekly loaves and pastries sold. Data provided in the table below the chart.
+      </figcaption>
+      <div
+        id="line-chart"
+        class="chart"
+        role="img"
+        aria-labelledby="line-heading"
+        aria-describedby="line-summary"
+      ></div>
+    </figure>
+
+    <details class="data-table-wrap">
+      <summary>Show data table for weekly units sold</summary>
+      <table class="data-table">
+        <caption>Weekly units sold by product line, weeks 1–12 of 2026</caption>
+        <thead>
+          <tr>
+            <th scope="col">Product line</th>
+            <th scope="col">W1</th>
+            <th scope="col">W2</th>
+            <th scope="col">W3</th>
+            <th scope="col">W4</th>
+            <th scope="col">W5</th>
+            <th scope="col">W6</th>
+            <th scope="col">W7</th>
+            <th scope="col">W8</th>
+            <th scope="col">W9</th>
+            <th scope="col">W10</th>
+            <th scope="col">W11</th>
+            <th scope="col">W12</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Sourdough loaves <span class="ca-inline" aria-hidden="true" data-tile="blue"   data-symbol="blue"></span></th><td>210</td><td>224</td><td>232</td><td>241</td><td>248</td><td>256</td><td>262</td><td>270</td><td>278</td><td>285</td><td>294</td><td>302</td></tr>
+          <tr><th scope="row">Pastries <span class="ca-inline" aria-hidden="true" data-tile="orange" data-symbol="orange"></span></th><td>168</td><td>174</td><td>182</td><td>179</td><td>186</td><td>190</td><td>196</td><td>202</td><td>207</td><td>211</td><td>216</td><td>222</td></tr>
+          <tr><th scope="row">Subscription boxes <span class="ca-inline" aria-hidden="true" data-tile="violet" data-symbol="violet"></span></th><td>88</td><td>92</td><td>95</td><td>99</td><td>103</td><td>108</td><td>112</td><td>117</td><td>121</td><td>126</td><td>130</td><td>135</td></tr>
+          <tr><th scope="row">Wholesale <span class="ca-inline" aria-hidden="true" data-tile="red"    data-symbol="red"></span></th><td>62</td><td>65</td><td>68</td><td>70</td><td>72</td><td>78</td><td>96</td><td>108</td><td>118</td><td>126</td><td>132</td><td>140</td></tr>
         </tbody>
       </table>
     </details>
@@ -137,24 +189,23 @@
       ColorADD is a symbol system by Miguel Neiva that lets people with color vision deficiency identify
       colors when color alone is a factor of identification, orientation, or choice
       (<a href="https://en.wikipedia.org/wiki/ColorADD">overview</a>).
-      Three primary symbols represent blue, yellow, and red. Secondary colors combine those symbols.
-      Black and white fill or invert the swatch to indicate dark or light tones.
+      Three primary symbols represent blue, red, and yellow. Secondary colors combine those
+      symbols. Below is the key for every color used in the charts on this page.
     </p>
     <ul class="swatch-grid" role="list">
-      <li><span class="swatch swatch--blue"    data-symbol="blue"    aria-hidden="true"></span><span>Blue — upward triangle, right</span></li>
-      <li><span class="swatch swatch--yellow"  data-symbol="yellow"  aria-hidden="true"></span><span>Yellow — downward triangle, left</span></li>
-      <li><span class="swatch swatch--red"     data-symbol="red"     aria-hidden="true"></span><span>Red — diagonal line</span></li>
-      <li><span class="swatch swatch--green"   data-symbol="green"   aria-hidden="true"></span><span>Green — blue + yellow</span></li>
-      <li><span class="swatch swatch--orange"  data-symbol="orange"  aria-hidden="true"></span><span>Orange — red + yellow</span></li>
-      <li><span class="swatch swatch--purple"  data-symbol="purple"  aria-hidden="true"></span><span>Purple — red + blue</span></li>
-      <li><span class="swatch swatch--brown"   data-symbol="brown"   aria-hidden="true"></span><span>Brown — red + green</span></li>
-      <li><span class="swatch swatch--black"   data-symbol="black"   aria-hidden="true"></span><span>Black — filled square</span></li>
-      <li><span class="swatch swatch--white"   data-symbol="white"   aria-hidden="true"></span><span>White — empty square</span></li>
+      <li><span class="swatch swatch--light-blue" data-symbol="blue"   aria-hidden="true"></span><span>Light blue — blue triangle, bottom right corner</span></li>
+      <li><span class="swatch swatch--blue"       data-symbol="blue"   aria-hidden="true"></span><span>Blue — same triangle on a saturated blue field</span></li>
+      <li><span class="swatch swatch--dark-blue"  data-symbol="blue"   aria-hidden="true"></span><span>Dark blue — same triangle on a near-black field</span></li>
+      <li><span class="swatch swatch--orange"     data-symbol="orange" aria-hidden="true"></span><span>Orange — red triangle plus yellow stripe</span></li>
+      <li><span class="swatch swatch--red"        data-symbol="red"    aria-hidden="true"></span><span>Red — triangle in the top left corner</span></li>
+      <li><span class="swatch swatch--violet"     data-symbol="violet" aria-hidden="true"></span><span>Violet — red triangle plus blue triangle</span></li>
     </ul>
     <p class="fine-print">
-      The symbols shown here follow the widely documented ColorADD forms
+      Yellow appears in the code as a diagonal stripe. It has no fill of its own in this palette;
+      it appears inside the orange glyph (red + yellow) as a compound symbol.
+      Glyph geometry follows the documented ColorADD forms
       (<a href="https://en.wikipedia.org/wiki/ColorADD">Wikipedia</a>,
-      <a href="https://www.eib.org/en/stories/symbols-colour-blind">EIB</a>).
+      <a href="https://fakoo.de/en/coloradd.html">Fakoo reference</a>).
       In production, license the official assets from <a href="https://www.coloradd.net/">coloradd.net</a>.
     </p>
   </section>

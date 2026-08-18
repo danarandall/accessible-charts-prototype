@@ -16,20 +16,16 @@
   --focus:         #1F2DF5;   /* 4.7:1 focus ring on white */
   --accent:        #1A073C;   /* Deep purple, used for links + accents */
 
-  /* Categorical series palette.
-     All fills verified ≥ 3:1 vs --bg white AND ≥ 4.5:1 for the white ColorADD
-     ink drawn on top of them. */
-  --c-blue:   #1A073C;
-  --c-yellow: #4A1D97;
-  --c-red:    #97091e;
-  --c-green:  #264475;
-  --c-orange: #8d3622;
-  --c-purple: #371573;
-  --c-brown:  #5F5277;
-
-  /* Ink color for the ColorADD symbol drawn on top of each series color.
-     White ink on all six saturated fills gives ≥ 4.5:1 against the fill. */
-  --symbol-ink: #ffffff;
+  /* Categorical series palette — base hues from the shared design system.
+     Each color is paired with the correct ColorADD glyph and, where the fill
+     is light or dark, the ColorADD light/dark modifier (outer frame for light
+     shades, inverted swatch for dark shades). */
+  --c-sky:        #42D3FB;   /* light blue — blue glyph, dark ink */
+  --c-azure:      #1F2DF5;   /* blue       — blue glyph, white ink */
+  --c-midnight:   #1A073C;   /* dark blue  — blue glyph, white ink */
+  --c-orange:     #FF6709;   /* orange     — orange glyph, dark ink */
+  --c-vermillion: #EB0A0A;   /* red        — red glyph, white ink */
+  --c-plum:       #7A34F2;   /* violet     — violet glyph, white ink */
 
   /* Radii & spacing */
   --r-sm: 6px;
@@ -184,25 +180,29 @@ h2 {
   display: inline-block;
   width: 18px; height: 18px;
   vertical-align: middle;
-  color: var(--text); /* controls SVG currentColor */
   flex: 0 0 auto;
+  background: var(--tile-bg, transparent);
+  border-radius: 3px;
+  color: var(--tile-ink, currentColor); /* drives the mask */
+  position: relative;
 }
-.ca-inline[data-symbol="blue"]   { color: var(--c-blue); }
-.ca-inline[data-symbol="yellow"] { color: var(--c-yellow); }
-.ca-inline[data-symbol="red"]    { color: var(--c-red); }
-.ca-inline[data-symbol="green"]  { color: var(--c-green); }
-.ca-inline[data-symbol="orange"] { color: var(--c-orange); }
-.ca-inline[data-symbol="purple"] { color: var(--c-purple); }
-.ca-inline[data-symbol="brown"]  { color: var(--c-brown); }
-.ca-inline[data-symbol="black"]  { color: #000; }
-.ca-inline[data-symbol="white"]  { color: var(--text); }
+/* Inline mark uses the tile's own fill for the tiny background box, and a
+   contrasting ink color for the glyph itself. --tile-bg and --tile-ink are
+   set by the palette below; --tile-ink drives the mask color via currentColor. */
+.ca-inline[data-tile="light-blue"] { --tile-bg: var(--c-sky);        --tile-ink: #14181f; }
+.ca-inline[data-tile="blue"]       { --tile-bg: var(--c-azure);      --tile-ink: #ffffff; }
+.ca-inline[data-tile="dark-blue"]  { --tile-bg: var(--c-midnight);   --tile-ink: #ffffff; }
+.ca-inline[data-tile="orange"]     { --tile-bg: var(--c-orange);     --tile-ink: #14181f; }
+.ca-inline[data-tile="red"]        { --tile-bg: var(--c-vermillion); --tile-ink: #ffffff; }
+.ca-inline[data-tile="violet"]     { --tile-bg: var(--c-plum);       --tile-ink: #ffffff; }
 .ca-inline::before {
   content: "";
-  display: block;
-  width: 100%; height: 100%;
-  background-color: currentColor;
-  -webkit-mask: var(--mask) center / contain no-repeat;
-          mask: var(--mask) center / contain no-repeat;
+  position: absolute;
+  inset: 2px;
+  /* Glyph is a fully-colored SVG injected as --glyph. Compound glyphs like
+     violet paint two component colors, so a monochrome mask would flatten
+     them. */
+  background: var(--glyph) center / contain no-repeat;
 }
 
 /* ===== Legend swatches =================================================== */
@@ -221,25 +221,19 @@ h2 {
   border-radius: var(--r-sm);
   border: 2px solid var(--text);
   position: relative;
-  color: var(--symbol-ink);
   flex: 0 0 auto;
 }
-.swatch--blue    { background: var(--c-blue); }
-.swatch--yellow  { background: var(--c-yellow); }
-.swatch--red     { background: var(--c-red); }
-.swatch--green   { background: var(--c-green); }
-.swatch--orange  { background: var(--c-orange); }
-.swatch--purple  { background: var(--c-purple); }
-.swatch--brown   { background: var(--c-brown); }
-.swatch--black   { background: #000; }
-.swatch--white   { background: #fff; color: var(--text); }
+.swatch--light-blue { background: var(--c-sky);        color: #14181f; }
+.swatch--blue       { background: var(--c-azure);      color: #ffffff; }
+.swatch--dark-blue  { background: var(--c-midnight);   color: #ffffff; }
+.swatch--orange     { background: var(--c-orange);     color: #14181f; }
+.swatch--red        { background: var(--c-vermillion); color: #ffffff; }
+.swatch--violet     { background: var(--c-plum);       color: #ffffff; }
 .swatch::after {
   content: "";
   position: absolute;
   inset: 6px;
-  background-color: currentColor;
-  -webkit-mask: var(--mask) center / contain no-repeat;
-          mask: var(--mask) center / contain no-repeat;
+  background: var(--glyph) center / contain no-repeat;
 }
 
 /* ===== Fine print ======================================================== */
