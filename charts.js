@@ -25,7 +25,7 @@
     'dark-blue':  { fill: token('--c-midnight'),   glyph: 'blue',   ink: '#ffffff' },
     'orange':     { fill: token('--c-orange'),     glyph: 'orange', ink: '#14181f' },
     'red':        { fill: token('--c-vermillion'), glyph: 'red',    ink: '#ffffff' },
-    'violet':     { fill: token('--c-plum'),       glyph: 'violet', ink: '#ffffff' }
+    'purple':     { fill: token('--c-plum'),       glyph: 'purple', ink: '#ffffff' }
   };
 
   // ---------------------------------------------------------------------------
@@ -38,49 +38,63 @@
   // on chart overlays where a border would fight the bar edge.
   // ---------------------------------------------------------------------------
 
-  // Geometry follows the official ColorADD glyphs documented at
-  // https://www.coloradd.net and https://fakoo.de/en/coloradd.html:
-  //   Red    = right triangle in the top-left corner
-  //            (hypotenuse from top-right down to bottom-left).
-  //   Yellow = thick diagonal stripe along that same top-right → bottom-left
-  //            axis, centered on the tile.
-  //   Blue   = right triangle in the bottom-right corner
-  //            (hypotenuse also from top-right down to bottom-left).
-  // Secondaries are exactly the union of their two primaries (color addition).
-  // Violet is red+blue → both triangles → fills the whole tile except the
-  // thin diagonal seam; we mimic that with two adjacent right triangles.
+  // Geometry follows the official ColorADD code sheet ("Primary and Secondary
+  // Colors" reference supplied by the user). Every primary is a rounded shape
+  // occupying roughly the outer third of the 24×24 tile:
+  //
+  //   Blue   = rounded right triangle in the TOP-LEFT corner. Right angle at
+  //            (1,1); legs run to (~12,1) and (1,~12); hypotenuse faces down-
+  //            right.
+  //   Red    = rounded right triangle in the BOTTOM-RIGHT corner. Right angle
+  //            at (23,23); legs run to (~12,23) and (23,~12); hypotenuse faces
+  //            up-left. Blue and red sit diagonally opposite across the tile.
+  //   Yellow = rounded diagonal bar (capsule) running from top-left area down
+  //            to bottom-right area — same axis the blue triangle's hypotenuse
+  //            and the red triangle's hypotenuse share. In compound glyphs the
+  //            bar sits BETWEEN the two triangles.
+  //
+  // Compounds are the union of their component primaries:
+  //   Green  = Blue + Yellow
+  //   Orange = Red + Yellow
+  //   Purple = Blue + Red
+  //   Brown  = Red + Green = Blue + Red + Yellow
+  //
+  // Rounded corners on triangles are drawn via a matching-color stroke with
+  // stroke-linejoin=round; capsules use stroke-linecap=round.
+  const R_JOIN = { rounded: true }; // marker for renderers
   const glyphs = {
-    blue:   [{ type: 'polygon', points: '23,1 23,23 1,23' }],
-    red:    [{ type: 'polygon', points: '1,1 23,1 1,23' }],
+    blue: [
+      // Rounded right triangle, top-left corner.
+      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN)
+    ],
+    red: [
+      // Rounded right triangle, bottom-right corner.
+      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
+    ],
     yellow: [
-      // Thick stripe along the top-right → bottom-left diagonal.
-      { type: 'polygon', points: '4,1 23,20 20,23 1,4' }
+      // Rounded diagonal bar from upper-left toward lower-right.
+      { type: 'capsule', x1: 4, y1: 4, x2: 20, y2: 20, thickness: 5 }
     ],
     green: [
-      // Blue corner triangle + yellow stripe
-      { type: 'polygon', points: '23,1 23,23 1,23' },
-      { type: 'polygon', points: '4,1 23,20 20,23 1,4' }
+      // Blue triangle + yellow bar.
+      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN),
+      { type: 'capsule', x1: 6, y1: 6, x2: 20, y2: 20, thickness: 5 }
     ],
     orange: [
-      // Red corner triangle + yellow stripe
-      { type: 'polygon', points: '1,1 23,1 1,23' },
-      { type: 'polygon', points: '4,1 23,20 20,23 1,4' }
+      // Yellow bar + red triangle.
+      { type: 'capsule', x1: 4, y1: 4, x2: 18, y2: 18, thickness: 5 },
+      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
     ],
-    violet: [
-      // Compound glyph = red + blue triangles filling the whole tile. To keep
-      // the compound color reading legible we paint the two triangles in
-      // their component colors instead of the series ink, and separate them
-      // with a hairline seam of tile fill. Result: top-left red triangle,
-      // bottom-right blue triangle, meeting at a visible diagonal.
-      { type: 'polygon', points: '1,1 22,1 1,22', fill: '#EB0A0A' },
-      { type: 'polygon', points: '23,2 23,23 2,23', fill: '#1F2DF5' }
+    purple: [
+      // Blue triangle + red triangle, diagonally opposite.
+      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN),
+      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
     ],
     brown: [
-      // Red + green = red + (blue + yellow) = all three primaries drawn in
-      // their component colors.
-      { type: 'polygon', points: '1,1 22,1 1,22', fill: '#EB0A0A' },
-      { type: 'polygon', points: '23,2 23,23 2,23', fill: '#1F2DF5' },
-      { type: 'polygon', points: '4,1 23,20 20,23 1,4', fill: '#FFD400' }
+      // Blue + red + yellow.
+      Object.assign({ type: 'polygon', points: '1,1 12,1 1,12' }, R_JOIN),
+      { type: 'capsule', x1: 6, y1: 6, x2: 18, y2: 18, thickness: 5 },
+      Object.assign({ type: 'polygon', points: '23,23 12,23 23,12' }, R_JOIN)
     ],
     black: [{ type: 'rect', x: 1, y: 1, width: 22, height: 22, fill: true }],
     white: [] // just the outline
@@ -94,10 +108,10 @@
     '<rect x="1" y="1" width="22" height="22" fill="none" stroke="#000" stroke-width="2"/>';
 
   // Build a fully-colored inline SVG for a glyph. Shapes with an explicit
-  // string `fill` (e.g. violet's two component-color triangles) are painted in
+  // string `fill` are painted in that color; not used by any current glyph
   // that color; all other shapes are painted in `ink`. Returned SVG can be
   // used as a CSS `background-image` (full color) rather than a monochrome
-  // mask, which is what preserves the compound-color reading on violet/brown.
+  // mask; retained for future compound-color extensions.
   function glyphToSvg(key, includeOutline, ink, outlineColor) {
     const parts = [];
     const paint = (s) => (typeof s.fill === 'string' ? s.fill : ink);
@@ -108,8 +122,19 @@
     }
     (glyphs[key] || []).forEach((shape) => {
       if (shape.type === 'polygon') {
+        const color = paint(shape);
+        // For rounded polygons we simulate rounded corners by giving the
+        // fill a matching thick stroke with round joins — the stroke rides
+        // OUTSIDE the polygon, effectively rounding the corners.
+        const strokeAttrs = shape.rounded
+          ? ` stroke="${color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`
+          : '';
         parts.push(
-          `<polygon points="${shape.points}" fill="${paint(shape)}" opacity="${shape.opacity ?? 1}"/>`
+          `<polygon points="${shape.points}" fill="${color}" opacity="${shape.opacity ?? 1}"${strokeAttrs}/>`
+        );
+      } else if (shape.type === 'capsule') {
+        parts.push(
+          `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" stroke="${paint(shape)}" stroke-width="${shape.thickness ?? 5}" stroke-linecap="round"/>`
         );
       } else if (shape.type === 'line') {
         parts.push(
@@ -230,7 +255,7 @@
     const py = (u) => cy - half + u * scale;
 
     // If a shape declares an explicit fill string (e.g. compound glyphs like
-    // violet drawn in their component colors), honor it; otherwise paint in
+    // shape (unused today), honor it; otherwise paint in
     // the series ink.
     const paintColor = (shape) =>
       typeof shape.fill === 'string' ? shape.fill : ink;
@@ -244,9 +269,31 @@
             return `${px(a)},${py(b)}`;
           })
           .join(' ');
+        const color = paintColor(shape);
+        const attrs = {
+          points: pts,
+          fill: color,
+          opacity: shape.opacity ?? 1
+        };
+        if (shape.rounded) {
+          attrs.stroke = color;
+          attrs['stroke-width'] = 3 * scale;
+          attrs['stroke-linejoin'] = 'round';
+          attrs['stroke-linecap'] = 'round';
+        }
+        renderer.createElement('polygon').attr(attrs).add(group);
+      } else if (shape.type === 'capsule') {
         renderer
-          .createElement('polygon')
-          .attr({ points: pts, fill: paintColor(shape), opacity: shape.opacity ?? 1 })
+          .createElement('line')
+          .attr({
+            x1: px(shape.x1),
+            y1: py(shape.y1),
+            x2: px(shape.x2),
+            y2: py(shape.y2),
+            stroke: paintColor(shape),
+            'stroke-width': (shape.thickness ?? 5) * scale,
+            'stroke-linecap': 'round'
+          })
           .add(group);
       } else if (shape.type === 'line') {
         renderer
@@ -407,10 +454,30 @@
                 return `${px(a)},${py(b)}`;
               })
               .join(' ');
+            const color = paint(shape);
             const el = document.createElementNS(svgNs, 'polygon');
             el.setAttribute('points', pts);
-            el.setAttribute('fill', paint(shape));
+            el.setAttribute('fill', color);
             el.setAttribute('opacity', String(shape.opacity != null ? shape.opacity : 1));
+            if (shape.rounded) {
+              el.setAttribute('stroke', color);
+              el.setAttribute('stroke-width', String(Math.max(1, 3 * scale)));
+              el.setAttribute('stroke-linejoin', 'round');
+              el.setAttribute('stroke-linecap', 'round');
+            }
+            g.appendChild(el);
+          } else if (shape.type === 'capsule') {
+            const el = document.createElementNS(svgNs, 'line');
+            el.setAttribute('x1', String(px(shape.x1)));
+            el.setAttribute('y1', String(py(shape.y1)));
+            el.setAttribute('x2', String(px(shape.x2)));
+            el.setAttribute('y2', String(py(shape.y2)));
+            el.setAttribute('stroke', paint(shape));
+            el.setAttribute(
+              'stroke-width',
+              String(Math.max(1, (shape.thickness != null ? shape.thickness : 5) * scale))
+            );
+            el.setAttribute('stroke-linecap', 'round');
             g.appendChild(el);
           } else if (shape.type === 'line') {
             const el = document.createElementNS(svgNs, 'line');
@@ -592,7 +659,7 @@
   const donutSeries = [
     { name: 'Farmers market',     tile: 'red',        y: 32 },
     { name: 'Wholesale accounts', tile: 'orange',     y: 22 },
-    { name: 'Subscription boxes', tile: 'violet',     y: 18 },
+    { name: 'Subscription boxes', tile: 'purple',     y: 18 },
     { name: 'Pop-ups',            tile: 'light-blue', y: 16 },
     { name: 'Online store',       tile: 'blue',       y: 12 }
   ];
@@ -668,14 +735,14 @@
       data: [210, 224, 232, 241, 248, 256, 262, 270, 278, 285, 294, 302] },
     { name: 'Pastries',           tile: 'orange',
       data: [168, 174, 182, 179, 186, 190, 196, 202, 207, 211, 216, 222] },
-    { name: 'Subscription boxes', tile: 'violet',
+    { name: 'Subscription boxes', tile: 'purple',
       data: [ 88,  92,  95,  99, 103, 108, 112, 117, 121, 126, 130, 135] },
     { name: 'Wholesale',          tile: 'red',
       data: [ 62,  65,  68,  70,  72,  78,  96, 108, 118, 126, 132, 140] }
   ];
 
   const lineChart = Highcharts.chart('line-chart', {
-    chart: { type: 'line', height: 460, spacingBottom: 24, marginRight: 140 },
+    chart: { type: 'line', height: 460, spacingBottom: 24, marginRight: 200 },
     title: { text: null },
     xAxis: {
       categories: weeks,
@@ -742,7 +809,7 @@
           },
           align: 'left',
           verticalAlign: 'middle',
-          x: 10,
+          x: 22,
           allowOverlap: false,
           style: {
             color: token('--text'),
@@ -787,7 +854,7 @@
     // line a distinct symbol cue at both endpoints and along its length.
     sizeForPoint: (series, point, i) => {
       const last = series.points.length - 1;
-      return i === 0 || i === 4 || i === 8 || i === last ? 20 : 0;
+      return i === 0 || i === 4 || i === 8 || i === last ? 28 : 0;
     }
   });
 

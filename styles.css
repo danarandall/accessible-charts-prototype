@@ -25,7 +25,7 @@
   --c-midnight:   #1A073C;   /* dark blue  — blue glyph, white ink */
   --c-orange:     #FF6709;   /* orange     — orange glyph, dark ink */
   --c-vermillion: #EB0A0A;   /* red        — red glyph, white ink */
-  --c-plum:       #7A34F2;   /* violet     — violet glyph, white ink */
+  --c-plum:       #7A34F2;   /* purple     — purple glyph, white ink */
 
   /* Radii & spacing */
   --r-sm: 6px;
@@ -194,13 +194,13 @@ h2 {
 .ca-inline[data-tile="dark-blue"]  { --tile-bg: var(--c-midnight);   --tile-ink: #ffffff; }
 .ca-inline[data-tile="orange"]     { --tile-bg: var(--c-orange);     --tile-ink: #14181f; }
 .ca-inline[data-tile="red"]        { --tile-bg: var(--c-vermillion); --tile-ink: #ffffff; }
-.ca-inline[data-tile="violet"]     { --tile-bg: var(--c-plum);       --tile-ink: #ffffff; }
+.ca-inline[data-tile="purple"]     { --tile-bg: var(--c-plum);       --tile-ink: #ffffff; }
 .ca-inline::before {
   content: "";
   position: absolute;
   inset: 2px;
   /* Glyph is a fully-colored SVG injected as --glyph. Compound glyphs like
-     violet paint two component colors, so a monochrome mask would flatten
+     retained for future compound-color extensions; single-ink glyphs render
      them. */
   background: var(--glyph) center / contain no-repeat;
 }
@@ -228,7 +228,7 @@ h2 {
 .swatch--dark-blue  { background: var(--c-midnight);   color: #ffffff; }
 .swatch--orange     { background: var(--c-orange);     color: #14181f; }
 .swatch--red        { background: var(--c-vermillion); color: #ffffff; }
-.swatch--violet     { background: var(--c-plum);       color: #ffffff; }
+.swatch--purple     { background: var(--c-plum);       color: #ffffff; }
 .swatch::after {
   content: "";
   position: absolute;
