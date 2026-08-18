@@ -20,9 +20,9 @@
   // Every entry maps a chart-fill hex to the correct ColorADD glyph key and
   // the ink color that keeps the glyph visible on that fill (≥ 4.5:1).
   const palette = {
-    'light-blue': { fill: token('--c-sky'),        glyph: 'blue',   ink: '#14181f' },
-    'blue':       { fill: token('--c-azure'),      glyph: 'blue',   ink: '#ffffff' },
-    'dark-blue':  { fill: token('--c-midnight'),   glyph: 'blue',   ink: '#ffffff' },
+    'light-blue': { fill: token('--c-sky'),        glyph: 'light-blue', ink: '#14181f' },
+    'blue':       { fill: token('--c-azure'),      glyph: 'blue',       ink: '#ffffff' },
+    'dark-blue':  { fill: token('--c-midnight'),   glyph: 'dark-blue',  ink: '#ffffff' },
     'orange':     { fill: token('--c-orange'),     glyph: 'orange', ink: '#14181f' },
     'red':        { fill: token('--c-vermillion'), glyph: 'red',    ink: '#ffffff' },
     'purple':     { fill: token('--c-plum'),       glyph: 'purple', ink: '#ffffff' }
@@ -54,14 +54,20 @@
   //   purple = blue shape + red shape
   //   green  = yellow bar + blue shape
   const glyphs = {
+    // Primary blue and red are wrapped in a larger padded viewBox so they
+    // render at roughly half the visual size of the composite shapes on the
+    // same tile — matching the ColorADD spec where primaries are smaller
+    // than their compounds. Paths are the Figma exports (viewBox origin at
+    // 0,0, extent ~55×54). We pad to a ~105×105 canvas so the shape occupies
+    // roughly half the tile width.
     blue: {
-      viewBox: '0 0 55 54',
+      viewBox: '-25 -25 105 105',
       paths: [
         'M54.6927 43.0445C54.6528 49.1348 49.6833 54.0396 43.593 53.9997L10.9771 53.7861C1.09539 53.7213 -3.71979 41.6927 3.38764 34.827L36.2126 3.11872C43.2378 -3.66748 54.9658 1.35511 54.9018 11.1225L54.6927 43.0445Z'
       ]
     },
     red: {
-      viewBox: '0 0 55 54',
+      viewBox: '-25 -25 105 105',
       paths: [
         'M2.54394e-05 11.0277C2.86631e-05 4.93728 4.9373 5.36865e-06 11.0277 1.50325e-05L43.6442 5.75229e-05C53.5261 6.88445e-05 58.4199 11.9969 51.3577 18.9089L18.7412 50.8314C11.7606 57.6635 1.22522e-07 52.7178 6.85494e-06 42.9503L2.54394e-05 11.0277Z'
       ]
@@ -92,26 +98,85 @@
         'M92.7908 84.6404C92.751 90.7256 87.7856 95.6263 81.7004 95.5864L49.112 95.3729C39.2386 95.3082 34.4275 83.2897 41.529 76.4299L74.3263 44.7483C81.3456 37.9678 93.0637 42.9861 92.9997 52.7453L92.7908 84.6404Z',
         'M74.472 2.78716C78.1882 -0.929036 84.2133 -0.929037 87.9295 2.78716C91.6457 6.50336 91.6457 12.5285 87.9295 16.2447L16.2447 87.9295C12.5685 91.6457 6.50335 91.6457 2.78715 87.9295C-0.929049 84.2133 -0.929049 78.1882 2.78715 74.472L74.472 2.78716Z'
       ]
+    },
+    // Light shade: blue wedge inside an outlined bounding box. The box is
+    // the official ColorADD light-shade indicator.
+    'light-blue': {
+      viewBox: '0 0 118 118',
+      shapes: [
+        { kind: 'rect', x: 4.5, y: 4.5, w: 109, h: 109, rx: 23.5, strokeWidth: 9, stroke: true, fill: false },
+        { kind: 'path', d: 'M80.5652 73.3672C80.5362 77.7854 76.9311 81.3436 72.5129 81.3147L40.6108 81.1057C33.4422 81.0587 29.9491 72.3326 35.1051 67.352L67.2117 36.3376C72.3081 31.4146 80.8161 35.0582 80.7697 42.1439L80.5652 73.3672Z' }
+      ]
+    },
+    // Dark shade: blue wedge cut out of a filled rounded rect (even-odd).
+    'dark-blue': {
+      viewBox: '0 0 118 118',
+      shapes: [
+        { kind: 'path', d: 'M90 0C105.464 0 118 12.536 118 28V90C118 105.464 105.464 118 90 118H28C12.536 118 0 105.464 0 90V28C0 12.536 12.536 0 28 0H90ZM80.7695 42.1436C80.8157 35.0581 72.3082 31.415 67.2119 36.3379L35.1055 67.3516C29.9495 72.3321 33.442 81.0581 40.6104 81.1055L72.5127 81.3145C76.9309 81.3434 80.5365 77.7854 80.5654 73.3672L80.7695 42.1436Z', fillRule: 'evenodd' }
+      ]
     }
   };
 
-  // Build a fully-colored inline SVG for a given glyph key. Returned SVG uses
-  // the glyph's own viewBox and paints every path in `ink`. When called for a
-  // legend swatch, no outline is added (the swatch's border comes from CSS).
+  // Normalize any glyph entry to a single `shapes` array of primitives. This
+  // lets primaries (paths) and light/dark variants (rect+path with even-odd)
+  // share the same rendering code paths.
+  function glyphShapes(key) {
+    const g = glyphs[key];
+    if (!g) return null;
+    if (g.shapes) return { viewBox: g.viewBox, shapes: g.shapes };
+    return {
+      viewBox: g.viewBox,
+      shapes: (g.paths || []).map((d) => ({ kind: 'path', d: d }))
+    };
+  }
+
+  // Serialize one shape primitive to an SVG string, painted in ink. `strokeInk`
+  // defaults to `ink` for shapes that stroke.
+  function shapeToSvgString(s, ink) {
+    if (s.kind === 'rect') {
+      const stroke = s.stroke ? ink : 'none';
+      const fill = s.fill ? ink : 'none';
+      const rx = s.rx != null ? ` rx="${s.rx}"` : '';
+      const sw = s.strokeWidth != null ? ` stroke-width="${s.strokeWidth}"` : '';
+      return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${rx} fill="${fill}" stroke="${stroke}"${sw}/>`;
+    }
+    const fr = s.fillRule ? ` fill-rule="${s.fillRule}"` : '';
+    return `<path d="${s.d}" fill="${ink}"${fr}/>`;
+  }
+
+  // Serialize one shape into a DOM SVGElement (for injection into a live SVG).
+  function shapeToSvgElement(s, ink, svgNs) {
+    if (s.kind === 'rect') {
+      const el = document.createElementNS(svgNs, 'rect');
+      el.setAttribute('x', String(s.x));
+      el.setAttribute('y', String(s.y));
+      el.setAttribute('width', String(s.w));
+      el.setAttribute('height', String(s.h));
+      if (s.rx != null) el.setAttribute('rx', String(s.rx));
+      el.setAttribute('fill', s.fill ? ink : 'none');
+      el.setAttribute('stroke', s.stroke ? ink : 'none');
+      if (s.strokeWidth != null) el.setAttribute('stroke-width', String(s.strokeWidth));
+      return el;
+    }
+    const el = document.createElementNS(svgNs, 'path');
+    el.setAttribute('d', s.d);
+    el.setAttribute('fill', ink);
+    if (s.fillRule) el.setAttribute('fill-rule', s.fillRule);
+    return el;
+  }
+
+  // Build a fully-colored inline SVG for a given glyph key. Painted in `ink`.
   // The `includeOutline` and `outlineColor` args are kept for API stability
   // with earlier renderers but currently ignored — the official ColorADD
-  // primaries have no bounding box; a box would misread as a light-shade
-  // variant.
+  // primaries have no bounding box on their own; the light-shade glyphs
+  // include the box natively in their shapes array.
   function glyphToSvg(key /*, includeOutline, ink, outlineColor */) {
-    // Reorder args by position; last arg is ink.
     const args = arguments;
     const ink = args[2] || '#000000';
-    const g = glyphs[key];
+    const g = glyphShapes(key);
     if (!g) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>`;
-    const paths = g.paths
-      .map((d) => `<path d="${d}" fill="${ink}"/>`)
-      .join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${g.viewBox}">${paths}</svg>`;
+    const body = g.shapes.map((s) => shapeToSvgString(s, ink)).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${g.viewBox}">${body}</svg>`;
   }
 
   // Convert an SVG string into a CSS `url()` value suitable for background-image.
@@ -126,17 +191,15 @@
   // second cue (symbol) as the marks in the chart itself.
   // ---------------------------------------------------------------------------
   function legendSwatchHtml(key, fill) {
-    const g = glyphs[key];
+    const g = glyphShapes(key);
     if (!g) return '';
-    const paths = g.paths
-      .map((d) => '<path d="' + d + '" fill="#ffffff"/>')
-      .join('');
+    const body = g.shapes.map((s) => shapeToSvgString(s, '#ffffff')).join('');
     return (
       '<span aria-hidden="true" class="la-legend-swatch">' +
         '<svg viewBox="' + g.viewBox + '" width="18" height="18" ' +
           'preserveAspectRatio="xMidYMid meet" focusable="false" ' +
           'style="background:' + fill + ';border-radius:3px;padding:2px;">' +
-          paths +
+          body +
         '</svg>' +
       '</span>'
     );
@@ -151,9 +214,21 @@
   // per class), so we can pick it up with getComputedStyle.
   const readInk = (el) => getComputedStyle(el).color || '#ffffff';
 
+  // Key section swatches render the glyph in monochrome (black or white —
+  // whichever has more contrast against the tile). This reinforces the
+  // ColorADD principle: the shape is the identifier, not the color. The ink
+  // is not tied to the palette's series ink; it's picked purely for legibility.
+  const rgbLuma = (rgb) => {
+    const m = rgb.match(/rgba?\(([^)]+)\)/);
+    if (!m) return 1;
+    const [r, g, b] = m[1].split(',').map((v) => parseFloat(v) / 255);
+    const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  };
   document.querySelectorAll('.swatch[data-symbol]').forEach((el) => {
     const key = el.getAttribute('data-symbol');
-    const ink = readInk(el);
+    const bg = getComputedStyle(el).backgroundColor;
+    const ink = rgbLuma(bg) > 0.4 ? '#000000' : '#ffffff';
     const svg = glyphToSvg(key, true, ink, ink);
     el.style.setProperty('--glyph', svgBgUrl(svg));
   });
@@ -180,26 +255,21 @@
     const half = size / 2;
     const group = renderer.g().attr({ zIndex: 6 }).add();
 
-    // Background tile: when we are drawing over a colored plot mark (bar top,
-    // pie slice) we pass tileFill = null and rely on the mark's own color; the
-    // subtle overlay softens the glyph's edges. On the line chart we pass the
-    // series color so the glyph sits on its own colored tile.
-    renderer
-      .rect(cx - half, cy - half, size, size, 4)
-      .attr({
-        fill: tileFill || 'rgba(255,255,255,0.15)',
-        stroke: ink,
-        'stroke-width': 1.5
-      })
-      .add(group);
+    // Background tile: for bar tops and pie slices, tileFill is null and we
+    // draw the glyph directly on the mark's own color — no bounding box. On
+    // the line chart we pass the series color so the glyph sits on a colored
+    // tile with no outline (the tile itself acts as the marker).
+    if (tileFill) {
+      renderer
+        .rect(cx - half, cy - half, size, size, 4)
+        .attr({ fill: tileFill, stroke: 'none' })
+        .add(group);
+    }
 
-    const g = glyphs[key];
+    const g = glyphShapes(key);
     if (g) {
-      // Insert a nested <svg> inside the group so the glyph paths render in
-      // their own native viewBox coordinate system; the outer <svg> handles
-      // the placement and scaling for us.
       const svgNs = 'http://www.w3.org/2000/svg';
-      const pad = size * 0.12; // leave 12% margin so shape doesn't kiss the tile edge
+      const pad = size * 0.12;
       const inner = document.createElementNS(svgNs, 'svg');
       inner.setAttribute('x', String(cx - half + pad));
       inner.setAttribute('y', String(cy - half + pad));
@@ -207,12 +277,7 @@
       inner.setAttribute('height', String(size - pad * 2));
       inner.setAttribute('viewBox', g.viewBox);
       inner.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-      g.paths.forEach((d) => {
-        const p = document.createElementNS(svgNs, 'path');
-        p.setAttribute('d', d);
-        p.setAttribute('fill', ink);
-        inner.appendChild(p);
-      });
+      g.shapes.forEach((s) => inner.appendChild(shapeToSvgElement(s, ink, svgNs)));
       group.element.appendChild(inner);
     }
 
@@ -231,6 +296,10 @@
       state.marks.forEach((m) => m.destroy());
       state.marks = [];
 
+      // Track placed line-chart glyph tiles per index (week) so we can
+      // vertically nudge later series whose y overlaps an earlier one.
+      const placed = new Map(); // pointIndex -> [{cx, cy, size}]
+
       chart.series.forEach((s) => {
         if (!s.visible) return;
         s.points.forEach((p, i) => {
@@ -240,12 +309,11 @@
           if (size <= 0) return;
 
           let cx, cy;
+          const isLineFamily = s.type === 'line' || s.type === 'spline' || s.type === 'area';
           if (s.type === 'column' || s.type === 'bar') {
             if (!p.shapeArgs) return;
             const box = p.shapeArgs;
             cx = box.x + box.width / 2 + chart.plotLeft;
-            // Anchor just below the top edge of the bar; if the bar is too
-            // short we skip (size 0).
             const inset = Math.min(size * 0.75, box.height * 0.35);
             cy = box.y + inset + chart.plotTop;
           } else if (s.type === 'pie') {
@@ -255,11 +323,31 @@
             const r = (shape.innerR + shape.r) / 2;
             cx = shape.x + Math.cos(midAngle) * r;
             cy = shape.y + Math.sin(midAngle) * r;
-          } else if (s.type === 'line' || s.type === 'spline' || s.type === 'area') {
-            // Line points have plotX / plotY in plot-relative coordinates.
+          } else if (isLineFamily) {
             if (p.plotX == null || p.plotY == null || p.isNull) return;
             cx = p.plotX + chart.plotLeft;
             cy = p.plotY + chart.plotTop;
+
+            // Collision avoidance: if another line-family glyph was already
+            // placed at the same x-index within one glyph-height, nudge this
+            // one up or down until it clears.
+            const nudge = size + 4;
+            const bucket = placed.get(i) || [];
+            const baseCy = cy;
+            // Try offsets: 0, -nudge, +nudge, -2*nudge, +2*nudge, -3*nudge.
+            const offsets = [0, -nudge, nudge, -2 * nudge, 2 * nudge, -3 * nudge];
+            for (const off of offsets) {
+              const candidate = baseCy + off;
+              const conflict = bucket.find(
+                (m) => Math.abs(m.cx - cx) < size && Math.abs(m.cy - candidate) < size
+              );
+              if (!conflict) {
+                cy = candidate;
+                break;
+              }
+            }
+            bucket.push({ cx, cy, size });
+            placed.set(i, bucket);
           } else {
             return;
           }
@@ -267,13 +355,7 @@
           const ink = opts.inkForPoint
             ? opts.inkForPoint(s, p, i)
             : opts.ink;
-          // For line-family series, give the glyph its own colored tile using
-          // the series color; otherwise let it sit transparently over the bar
-          // or pie fill.
-          const tileFill =
-            (s.type === 'line' || s.type === 'spline' || s.type === 'area')
-              ? s.color
-              : null;
+          const tileFill = isLineFamily ? s.color : null;
           const mark = drawColorAddGlyph(chart, cx, cy, size, key, ink, tileFill);
           state.marks.push(mark);
         });
@@ -329,7 +411,7 @@
         const cx = sx + sw / 2;
         const cy = sy + sh / 2;
 
-        const glyph = glyphs[key];
+        const glyph = glyphShapes(key);
         if (!glyph) return;
 
         // Build a nested <svg> holding the glyph paths in their own native
@@ -346,12 +428,7 @@
         inner.setAttribute('height', String(size - pad * 2));
         inner.setAttribute('viewBox', glyph.viewBox);
         inner.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-        glyph.paths.forEach((d) => {
-          const p = document.createElementNS(svgNs, 'path');
-          p.setAttribute('d', d);
-          p.setAttribute('fill', ink);
-          inner.appendChild(p);
-        });
+        glyph.shapes.forEach((s) => inner.appendChild(shapeToSvgElement(s, ink, svgNs)));
         parent.appendChild(inner);
 
         state.marks.push({
