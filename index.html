@@ -186,25 +186,28 @@
   <section aria-labelledby="legend-heading" class="legend-key">
     <h2 id="legend-heading">ColorADD key</h2>
     <p>
-      ColorADD is a symbol system by Miguel Neiva that lets people with color vision deficiency identify
-      colors when color alone is a factor of identification, orientation, or choice
-      (<a href="https://en.wikipedia.org/wiki/ColorADD">overview</a>).
-      Three primary symbols represent blue, red, and yellow. Secondary colors combine those
-      symbols. Below is the key for every color used in the charts on this page.
+      ColorADD is a symbol system by Miguel Neiva that lets people with color vision
+      deficiency identify colors when color alone would otherwise be the only cue
+      (<a href="https://www.coloradd.net/">coloradd.net</a>).
+      Three primary shapes represent blue, red, and yellow. Secondary colors combine
+      those primaries in one tile. A shape enclosed in an outlined box indicates a
+      lighter shade of that color; a shape cut out of a filled box indicates a darker
+      shade. Below is the key for every color used in the charts on this page.
     </p>
     <ul class="swatch-grid" role="list">
-      <li><span class="swatch swatch--light-blue" data-symbol="light-blue" aria-hidden="true"></span><span>Light blue — blue primary inside an outlined box (the box is the light-shade indicator)</span></li>
-      <li><span class="swatch swatch--blue"       data-symbol="blue"       aria-hidden="true"></span><span>Blue — primary symbol on a saturated blue field</span></li>
-      <li><span class="swatch swatch--dark-blue"  data-symbol="dark-blue"  aria-hidden="true"></span><span>Dark blue — blue primary cut out of a filled box (the filled box is the dark-shade indicator)</span></li>
-      <li><span class="swatch swatch--orange"     data-symbol="orange" aria-hidden="true"></span><span>Orange — red primary combined with the yellow diagonal bar</span></li>
-      <li><span class="swatch swatch--red"        data-symbol="red"    aria-hidden="true"></span><span>Red — red primary symbol</span></li>
-      <li><span class="swatch swatch--purple"     data-symbol="purple" aria-hidden="true"></span><span>Purple — blue primary combined with the red primary</span></li>
+      <li><span class="swatch swatch--light-blue" data-symbol="light-blue" aria-hidden="true"></span><span>Light blue — blue wedge inside an outlined box (the box is the light-shade indicator)</span></li>
+      <li><span class="swatch swatch--blue"       data-symbol="blue"       aria-hidden="true"></span><span>Blue — a wedge pointing to the top-left corner of the tile</span></li>
+      <li><span class="swatch swatch--dark-blue"  data-symbol="dark-blue"  aria-hidden="true"></span><span>Dark blue — blue wedge cut out of a filled box (the filled box is the dark-shade indicator)</span></li>
+      <li><span class="swatch swatch--orange"     data-symbol="orange" aria-hidden="true"></span><span>Orange — red wedge combined with the yellow diagonal bar (red + yellow)</span></li>
+      <li><span class="swatch swatch--red"        data-symbol="red"    aria-hidden="true"></span><span>Red — a wedge pointing to the bottom-right corner of the tile</span></li>
+      <li><span class="swatch swatch--purple"     data-symbol="purple" aria-hidden="true"></span><span>Purple — the blue and red wedges combined into a single shape (red + blue)</span></li>
     </ul>
     <p class="fine-print">
-      Yellow appears in the ColorADD code as a rounded diagonal bar. It has no color of
-      its own in this palette; it shows up inside the orange glyph (red + yellow) as a
-      compound symbol. Glyph geometry follows the official ColorADD reference sheet.
-      In production, license the official assets from <a href="https://www.coloradd.net/">coloradd.net</a>.
+      Yellow appears in ColorADD as a diagonal bar running from the top-right to the
+      bottom-left of the tile. It has no color of its own in this palette; it shows up
+      as a component of the orange glyph. Glyph geometry follows the official ColorADD
+      reference. In production, license the official assets from
+      <a href="https://www.coloradd.net/">coloradd.net</a>.
     </p>
   </section>
 
@@ -230,72 +233,10 @@
   </div>
 </footer>
 
-<!-- Off-screen SVG library: one authoritative ColorADD glyph per color.
-     Referenced from Highcharts markers, from swatches in the legend, and from
-     the inline ColorADD marks inside the data tables. Single source of truth. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <!-- Each glyph is drawn on a 24x24 viewBox. Primary colors:
-         Blue   = triangle pointing up-right, aligned to right edge
-         Yellow = triangle pointing down-left, aligned to left edge
-         Red    = diagonal line, bottom-left to top-right
-         Black  = solid square
-         White  = empty square with border
-         Secondaries combine the primary strokes on a single tile. -->
-
-    <symbol id="ca-blue" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <polygon points="23,1 23,23 1,23" fill="currentColor"/>
-    </symbol>
-
-    <symbol id="ca-yellow" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <polygon points="1,1 23,1 1,23" fill="currentColor"/>
-    </symbol>
-
-    <symbol id="ca-red" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
-    </symbol>
-
-    <symbol id="ca-green" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <!-- blue + yellow -->
-      <polygon points="23,1 23,23 1,23" fill="currentColor" opacity=".9"/>
-      <polygon points="1,1 23,1 1,23" fill="currentColor" opacity=".55"/>
-    </symbol>
-
-    <symbol id="ca-orange" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <!-- red + yellow -->
-      <polygon points="1,1 23,1 1,23" fill="currentColor" opacity=".55"/>
-      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
-    </symbol>
-
-    <symbol id="ca-purple" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <!-- red + blue -->
-      <polygon points="23,1 23,23 1,23" fill="currentColor" opacity=".85"/>
-      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
-    </symbol>
-
-    <symbol id="ca-brown" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-      <!-- red + green (blue + yellow + red) -->
-      <polygon points="23,1 23,23 1,23" fill="currentColor" opacity=".8"/>
-      <polygon points="1,1 23,1 1,23" fill="currentColor" opacity=".5"/>
-      <line x1="1" y1="23" x2="23" y2="1" stroke="currentColor" stroke-width="3.5"/>
-    </symbol>
-
-    <symbol id="ca-black" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2"/>
-    </symbol>
-
-    <symbol id="ca-white" viewBox="0 0 24 24">
-      <rect x="1" y="1" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
-    </symbol>
-  </defs>
-</svg>
+<!-- ColorADD glyph geometry lives in charts.js (glyphShapes()), populated
+     from the official ColorADD reference. Chart markers, legend swatches,
+     inline table tiles, and the key section all read from that single
+     source, so there is no separate off-screen SVG library. -->
 
 <script src="./charts.js"></script>
 </body>

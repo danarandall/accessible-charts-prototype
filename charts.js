@@ -328,16 +328,31 @@
             cx = p.plotX + chart.plotLeft;
             cy = p.plotY + chart.plotTop;
 
+            // Keep the tile fully inside the plot area at the endpoints.
+            // Without this, a symbol anchored at the first or last point
+            // gets clipped by the y-axis / plot edge.
+            const halfTile = size / 2 + 2;
+            const plotRight = chart.plotLeft + chart.plotWidth;
+            if (cx - halfTile < chart.plotLeft) cx = chart.plotLeft + halfTile;
+            if (cx + halfTile > plotRight) cx = plotRight - halfTile;
+
             // Collision avoidance: if another line-family glyph was already
             // placed at the same x-index within one glyph-height, nudge this
-            // one up or down until it clears.
+            // one up or down until it clears. Prefer nudging UP first so we
+            // never push a tile below the plot area (which would let it
+            // overlap axis tick labels).
             const nudge = size + 4;
             const bucket = placed.get(i) || [];
             const baseCy = cy;
-            // Try offsets: 0, -nudge, +nudge, -2*nudge, +2*nudge, -3*nudge.
-            const offsets = [0, -nudge, nudge, -2 * nudge, 2 * nudge, -3 * nudge];
+            const plotBottom = chart.plotTop + chart.plotHeight;
+            const plotTop = chart.plotTop;
+            // Try upward offsets first, then downward, alternating.
+            const offsets = [0, -nudge, -2 * nudge, -3 * nudge, nudge, 2 * nudge, 3 * nudge];
             for (const off of offsets) {
               const candidate = baseCy + off;
+              // Skip candidates that would push the tile outside the plot.
+              if (candidate - halfTile < plotTop) continue;
+              if (candidate + halfTile > plotBottom) continue;
               const conflict = bucket.find(
                 (m) => Math.abs(m.cx - cx) < size && Math.abs(m.cy - candidate) < size
               );
@@ -346,6 +361,9 @@
                 break;
               }
             }
+            // Final safety clamp so the tile never renders outside the plot.
+            if (cy - halfTile < plotTop) cy = plotTop + halfTile;
+            if (cy + halfTile > plotBottom) cy = plotBottom - halfTile;
             bucket.push({ cx, cy, size });
             placed.set(i, bucket);
           } else {
@@ -756,6 +774,10 @@
         color: p.fill,
         data: s.data,
         marker: { fillColor: p.fill },
+        // Force the legend swatch to render as a filled rectangle instead
+        // of the default horizontal line. This gives decorateLegendSwatches
+        // a real width/height to read so it can overlay the ColorADD glyph.
+        legendSymbol: 'rectangle',
         accessibility: {
           description: `${s.name} weekly units across weeks 1 through 12.`
         }
@@ -775,13 +797,11 @@
   attachColorAddOverlay(lineChart, {
     keyForPoint: (series) => series.userOptions.key,
     inkForPoint: (series) => series.userOptions.colorAddInk,
-    // Only anchor a glyph at four evenly-spaced points per line: weeks 1, 5,
-    // 9, and 12. Twelve tiles per line would crowd the chart; four gives every
-    // line a distinct symbol cue at both endpoints and along its length.
-    sizeForPoint: (series, point, i) => {
-      const last = series.points.length - 1;
-      return i === 0 || i === 4 || i === 8 || i === last ? 36 : 0;
-    }
+    // Anchor a single glyph per series at the start (left edge) so each
+    // line carries its own symbol cue at its origin, without repeated
+    // markers cluttering the chart or overlapping between series at
+    // intermediate weeks.
+    sizeForPoint: (series, point, i) => (i === 0 ? 36 : 0)
   });
 
   decorateLegendSwatches(lineChart);
